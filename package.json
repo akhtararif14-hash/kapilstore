@@ -1,0 +1,33 @@
+{
+  "name": "kapils",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@vercel/functions": "^3.4.3",
+    "cloudinary": "^2.9.0",
+    "fuse.js": "^7.1.0",
+    "googleapis": "^170.1.0",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.563.0",
+    "mongoose": "^9.3.0",
+    "next": "^16.2.1",
+    "next-auth": "^4.24.7",
+    "next-cloudinary": "^6.17.5",
+    "nodemailer": "^7.0.12",
+    "razorpay": "^2.9.2",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-icons": "^5.5.0",
+    "vercel": "^50.10.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "babel-plugin-react-compiler": "1.0.0",
+    "tailwindcss": "^4"
+  }
+}
