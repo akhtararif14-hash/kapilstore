@@ -103,7 +103,7 @@ const Footer = () => {
             reserved.
           </p>
           <p className="flex items-center gap-2">
-            Engineered by
+              Built by
             <a
               href="https://www.linkedin.com/in/-mohammed-awaiz/"
               target="_blank"
