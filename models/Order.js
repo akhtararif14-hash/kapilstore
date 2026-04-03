@@ -40,10 +40,10 @@ const OrderSchema = new mongoose.Schema(
     },
 
     paymentStatus: {
-      type: String,
-      enum: ["pending", "pending_verification", "paid", "failed"],
-      default: "pending_verification",
-    },
+  type: String,
+  enum: ["pending", "pending_verification", "paid", "failed", "cod_pending"], // ← add cod_pending
+  default: "pending_verification",
+},
 
     utrNumber: { type: String, default: null },
     razorpayOrderId: { type: String, default: null },
