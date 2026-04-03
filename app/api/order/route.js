@@ -196,17 +196,17 @@ async function sendEmails({
       : "Rs." + deliveryCharge;
 
   // COD or Online payment banner
-  const paymentBanner = isCOD
-    ? '<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin:0 0 20px;">' +
-      '<p style="margin:0;font-size:14px;color:#92400e;font-weight:700;">💵 Cash on Delivery</p>' +
-      '<p style="margin:6px 0 0;font-size:13px;color:#92400e;">Please keep <strong>Rs.' +
-      total +
-      "</strong> ready when your order arrives. Exact change preferred.</p>" +
-      "</div>"
-    : '<div style="background:#dcfce7;border:1px solid #bbf7d0;border-radius:10px;padding:14px 18px;margin:0 0 20px;">' +
-      '<p style="margin:0;font-size:14px;color:#166534;font-weight:700;">✅ Payment Confirmed</p>' +
-      '<p style="margin:6px 0 0;font-size:13px;color:#166534;">Your payment has been received. Your order is being processed.</p>' +
-      "</div>";
+ const paymentBanner = isCOD
+  ? '<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin:0 0 20px;">' +
+    '<p style="margin:0;font-size:14px;color:#92400e;font-weight:700;">💵 Cash on Delivery</p>' +
+    '<p style="margin:6px 0 0;font-size:13px;color:#92400e;">Please keep <strong>Rs.' +
+    total +
+    "</strong> ready when your order arrives. Exact change preferred.</p>" +
+    "</div>"
+  : '<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin:0 0 20px;">' +
+    '<p style="margin:0;font-size:14px;color:#92400e;font-weight:700;">⚠️ Online Payment Temporarily Unavailable</p>' +
+    '<p style="margin:6px 0 0;font-size:13px;color:#92400e;">We are currently only accepting Cash on Delivery. Please place a new order and select COD as your payment method.</p>' +
+    "</div>";
 
   const year = new Date().getFullYear();
 
