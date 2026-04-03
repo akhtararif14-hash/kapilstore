@@ -12,6 +12,7 @@ import {
   FaBolt,
   FaCalendarCheck,
   FaLock,
+  FaMoneyBillWave,
 } from "react-icons/fa";
 import { MdPayment } from "react-icons/md";
 
@@ -29,6 +30,8 @@ export default function CheckoutPage() {
   const [success, setSuccess] = useState(false);
   const [placedOrderId, setPlacedOrderId] = useState("");
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("cod"); // "cod" | "razorpay"
+  const [codSuccess, setCodSuccess] = useState(false);
 
   const subtotal = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -57,6 +60,45 @@ export default function CheckoutPage() {
     return true;
   };
 
+  // ─── COD Handler ───────────────────────────────────────────────
+  const handleCODOrder = async () => {
+    if (!validateForm()) return;
+    setLoading(true);
+
+    try {
+      const orderRes = await fetch("/api/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customer: { ...form, isJamiaStudent },
+          cart,
+          total: grandTotal,
+          deliveryCharge,
+          paymentMethod: "cod",
+          paymentStatus: "cod_pending",
+        }),
+      });
+
+      const orderData = await orderRes.json();
+
+      if (!orderRes.ok) {
+        throw new Error(orderData.message || "Failed to place order");
+      }
+
+      setPlacedOrderId(orderData.orderId);
+      setCodSuccess(true);
+      setSuccess(true);
+      clearCart();
+      setForm({ name: "", phone: "", email: "", address: "" });
+    } catch (err) {
+      console.error("COD Order error:", err);
+      alert(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ─── Razorpay Handler ──────────────────────────────────────────
   const handlePayClick = async () => {
     if (!validateForm()) return;
     if (!razorpayLoaded) {
@@ -135,6 +177,7 @@ export default function CheckoutPage() {
 
           if (verifyRes.ok && verifyData.success) {
             setPlacedOrderId(internalOrderId);
+            setCodSuccess(false);
             setSuccess(true);
             clearCart();
             setForm({ name: "", phone: "", email: "", address: "" });
@@ -168,7 +211,7 @@ export default function CheckoutPage() {
     }
   };
 
-  //Success Screen
+  // ─── Success Screen ────────────────────────────────────────────
   if (success) {
     return (
       <div className="min-h-screen bg-[#22323c] text-[#f5f5f5] flex items-center justify-center px-4">
@@ -181,12 +224,27 @@ export default function CheckoutPage() {
             Order ID:{" "}
             <span className="font-mono text-white">{placedOrderId}</span>
           </p>
-          <p className="text-green-400 text-sm mb-2 font-semibold">
-            Payment confirmed successfully.
-          </p>
-          <p className="text-white/50 text-sm mb-8">
-            We'll contact you soon to confirm delivery.
-          </p>
+
+          {codSuccess ? (
+            <>
+              <p className="text-yellow-400 text-sm mb-2 font-semibold">
+                Cash on Delivery — Pay when your order arrives.
+              </p>
+              <p className="text-white/50 text-sm mb-8">
+                Keep ₹{grandTotal} ready. We'll contact you before delivery.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-green-400 text-sm mb-2 font-semibold">
+                Payment confirmed successfully.
+              </p>
+              <p className="text-white/50 text-sm mb-8">
+                We'll contact you soon to confirm delivery.
+              </p>
+            </>
+          )}
+
           <div className="flex flex-col gap-3">
             <a
               href={`/track/${placedOrderId}`}
@@ -379,27 +437,133 @@ export default function CheckoutPage() {
                 </ul>
               </div>
 
-              {/* Payment Method */}
+              {/* ─── Payment Method Selector ─── */}
               <div className="bg-[#1a2830] rounded-2xl p-6 border border-white/5">
                 <h2 className="text-lg font-black mb-4 text-[#17d492]">
                   Payment Method
                 </h2>
-                <div className="flex items-center gap-4 p-4 rounded-xl border border-[#17d492] bg-[#17d492]/10">
-                  <MdPayment size={24} className="text-[#17d492] shrink-0" />
-                  <div className="flex-1">
-                    <p className="font-bold text-sm text-white">
-                      Razorpay — UPI / Cards / Net Banking / Wallets
-                    </p>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      GPay, PhonePe, Paytm, Credit/Debit Cards & more
+
+                <div className="space-y-3">
+                  {/* COD Option */}
+                  <div
+                    onClick={() => setPaymentMethod("cod")}
+                    className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition ${
+                      paymentMethod === "cod"
+                        ? "border-[#17d492] bg-[#17d492]/10"
+                        : "border-white/10 hover:border-white/20"
+                    }`}
+                  >
+                    <div
+                      className={`mt-0.5 w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center transition ${
+                        paymentMethod === "cod"
+                          ? "border-[#17d492]"
+                          : "border-slate-500"
+                      }`}
+                    >
+                      {paymentMethod === "cod" && (
+                        <div className="w-2 h-2 rounded-full bg-[#17d492]" />
+                      )}
+                    </div>
+                    <FaMoneyBillWave
+                      size={20}
+                      className={`shrink-0 mt-0.5 transition ${
+                        paymentMethod === "cod"
+                          ? "text-[#17d492]"
+                          : "text-slate-500"
+                      }`}
+                    />
+                    <div className="flex-1">
+                      <p
+                        className={`font-bold text-sm transition ${
+                          paymentMethod === "cod"
+                            ? "text-white"
+                            : "text-slate-400"
+                        }`}
+                      >
+                        Cash on Delivery
+                      </p>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Pay in cash when your order arrives at your doorstep
+                      </p>
+                    </div>
+                    {paymentMethod === "cod" && (
+                      <span className="text-[10px] font-black px-2 py-1 rounded-lg bg-[#17d492]/20 text-[#17d492] shrink-0">
+                        SELECTED
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Razorpay Option */}
+                  <div
+                    onClick={() => setPaymentMethod("razorpay")}
+                    className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition ${
+                      paymentMethod === "razorpay"
+                        ? "border-[#17d492] bg-[#17d492]/10"
+                        : "border-white/10 hover:border-white/20"
+                    }`}
+                  >
+                    <div
+                      className={`mt-0.5 w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center transition ${
+                        paymentMethod === "razorpay"
+                          ? "border-[#17d492]"
+                          : "border-slate-500"
+                      }`}
+                    >
+                      {paymentMethod === "razorpay" && (
+                        <div className="w-2 h-2 rounded-full bg-[#17d492]" />
+                      )}
+                    </div>
+                    <MdPayment
+                      size={20}
+                      className={`shrink-0 mt-0.5 transition ${
+                        paymentMethod === "razorpay"
+                          ? "text-[#17d492]"
+                          : "text-slate-500"
+                      }`}
+                    />
+                    <div className="flex-1">
+                      <p
+                        className={`font-bold text-sm transition ${
+                          paymentMethod === "razorpay"
+                            ? "text-white"
+                            : "text-slate-400"
+                        }`}
+                      >
+                        Pay Online — UPI / Cards / Net Banking / Wallets
+                      </p>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        GPay, PhonePe, Paytm, Credit/Debit Cards & more
+                      </p>
+                    </div>
+                    {paymentMethod === "razorpay" && (
+                      <span className="text-[10px] font-black px-2 py-1 rounded-lg bg-[#17d492]/20 text-[#17d492] shrink-0">
+                        SELECTED
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* COD warning note */}
+                {paymentMethod === "cod" && (
+                  <div className="mt-3 flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded-xl px-4 py-3">
+                    <FaMoneyBillWave
+                      size={13}
+                      className="text-yellow-400 shrink-0"
+                    />
+                    <p className="text-xs text-yellow-300">
+                      Keep{" "}
+                      <span className="font-black">exact change of ₹{grandTotal}</span>{" "}
+                      ready. Delivery agent may not carry change.
                     </p>
                   </div>
-                  <div className="w-4 h-4 rounded-full border-2 border-[#17d492] bg-[#17d492] shrink-0" />
-                </div>
-                <p className="mt-3 flex items-center gap-2 text-xs text-slate-500">
-                  <FaLock size={10} />
-                  256-bit SSL secured payment powered by Razorpay
-                </p>
+                )}
+
+                {paymentMethod === "razorpay" && (
+                  <p className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                    <FaLock size={10} />
+                    256-bit SSL secured payment powered by Razorpay
+                  </p>
+                )}
               </div>
             </div>
 
@@ -457,7 +621,9 @@ export default function CheckoutPage() {
               </div>
 
               <button
-                onClick={handlePayClick}
+                onClick={
+                  paymentMethod === "cod" ? handleCODOrder : handlePayClick
+                }
                 disabled={loading || cart.length === 0}
                 className={`w-full mt-5 py-4 rounded-xl font-black transition text-[#22323c] ${
                   loading || cart.length === 0
@@ -465,11 +631,18 @@ export default function CheckoutPage() {
                     : "bg-[#17d492] hover:bg-[#14b87e] hover:-translate-y-0.5 active:scale-95 shadow-[0_10px_20px_-10px_rgba(23,212,146,0.4)]"
                 }`}
               >
-                {loading ? "Processing..." : `Pay ₹${grandTotal} Securely`}
+                {loading
+                  ? "Placing Order..."
+                  : paymentMethod === "cod"
+                  ? `Place Order — Pay ₹${grandTotal} on Delivery`
+                  : `Pay ₹${grandTotal} Securely`}
               </button>
 
               <p className="text-xs text-center mt-3 text-slate-600 flex items-center justify-center gap-1">
-                <FaLock size={9} /> Secure Checkout powered by Razorpay
+                <FaLock size={9} />{" "}
+                {paymentMethod === "cod"
+                  ? "No advance payment required"
+                  : "Secure Checkout powered by Razorpay"}
               </p>
             </div>
           </div>

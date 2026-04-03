@@ -90,7 +90,7 @@ export async function POST(req) {
       orderCategory,
       deliveryCharge,
       total,
-      paymentMethod,
+      paymentMethod,  // ← "cod" or "razorpay" now passed correctly
       utrNumber,
     }).catch((err) => console.error("Email error:", err));
 
@@ -107,7 +107,7 @@ export async function POST(req) {
   }
 }
 
-// ── Email helper — NO nested template literals ────────────────────
+// ── Email helper ──────────────────────────────────────────────────
 async function sendEmails({
   customer,
   cart,
@@ -125,7 +125,9 @@ async function sendEmails({
     auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
   });
 
-  // Plain-text items list (string concat, no nested templates)
+  const isCOD = paymentMethod === "cod";
+
+  // Plain-text items list
   const itemsList = cart
     .map(
       (item) =>
@@ -137,13 +139,16 @@ async function sendEmails({
     )
     .join("\n");
 
-  // 1. Owner notification
+  // ── 1. Owner notification ─────────────────────────────────────
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
     to: process.env.EMAIL_USER,
-    subject: "New Order Received: " + orderId,
+    subject:
+      (isCOD ? "💵 New COD Order: " : "✅ New Online Order: ") + orderId,
     text: [
-      "New order received!",
+      isCOD
+        ? "⚠️  CASH ON DELIVERY ORDER — Collect Rs." + total + " at delivery"
+        : "✅ ONLINE PAYMENT ORDER",
       "",
       "Order ID: " + orderId,
       "Category: " + orderCategory,
@@ -164,10 +169,9 @@ async function sendEmails({
     ].join("\n"),
   });
 
-  // 2. Customer confirmation email
+  // ── 2. Customer confirmation email ────────────────────────────
   if (!customer.email) return;
 
-  // Build table rows with string concat (avoids nested backtick crash)
   const itemRows = cart
     .map(function (item) {
       return (
@@ -191,6 +195,19 @@ async function sendEmails({
       ? '<span style="color:#17d492;font-weight:bold;">FREE</span>'
       : "Rs." + deliveryCharge;
 
+  // COD or Online payment banner
+  const paymentBanner = isCOD
+    ? '<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin:0 0 20px;">' +
+      '<p style="margin:0;font-size:14px;color:#92400e;font-weight:700;">💵 Cash on Delivery</p>' +
+      '<p style="margin:6px 0 0;font-size:13px;color:#92400e;">Please keep <strong>Rs.' +
+      total +
+      "</strong> ready when your order arrives. Exact change preferred.</p>" +
+      "</div>"
+    : '<div style="background:#dcfce7;border:1px solid #bbf7d0;border-radius:10px;padding:14px 18px;margin:0 0 20px;">' +
+      '<p style="margin:0;font-size:14px;color:#166534;font-weight:700;">✅ Payment Confirmed</p>' +
+      '<p style="margin:6px 0 0;font-size:13px;color:#166534;">Your payment has been received. Your order is being processed.</p>' +
+      "</div>";
+
   const year = new Date().getFullYear();
 
   const emailHtml =
@@ -209,12 +226,16 @@ async function sendEmails({
     customer.phone +
     "</strong> to confirm delivery." +
     "</p>" +
-    '<div style="background:#1a2830;border-radius:10px;padding:16px 20px;margin:0 0 24px;border:1px solid #17d49230;">' +
+    // Order ID box
+    '<div style="background:#1a2830;border-radius:10px;padding:16px 20px;margin:0 0 20px;border:1px solid #17d49230;">' +
     '<p style="margin:0 0 4px;font-size:11px;color:#17d492;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;">Order ID</p>' +
     '<p style="margin:0;font-size:22px;font-weight:900;font-family:monospace;color:#fff;">' +
     orderId +
     "</p>" +
     "</div>" +
+    // COD or payment banner
+    paymentBanner +
+    // Items table
     '<table style="width:100%;border-collapse:collapse;margin:0 0 8px;">' +
     itemRows +
     "<tr>" +
@@ -224,7 +245,9 @@ async function sendEmails({
     "</td>" +
     "</tr>" +
     "<tr>" +
-    '<td style="padding:12px 0 0;font-size:16px;font-weight:900;color:#fff;border-top:1px solid #ffffff20;">Total Paid</td>' +
+    '<td style="padding:12px 0 0;font-size:16px;font-weight:900;color:#fff;border-top:1px solid #ffffff20;">' +
+    (isCOD ? "Amount to Pay" : "Total Paid") +
+    "</td>" +
     '<td style="padding:12px 0 0;font-size:16px;font-weight:900;color:#17d492;text-align:right;border-top:1px solid #ffffff20;">Rs.' +
     total +
     "</td>" +
@@ -250,7 +273,10 @@ async function sendEmails({
   await transporter.sendMail({
     from: '"Kapil Store" <' + process.env.EMAIL_USER + ">",
     to: customer.email,
-    subject: "Order Confirmed - " + orderId + " | Kapil Store",
+    subject:
+      (isCOD ? "Order Confirmed (COD) - " : "Order Confirmed - ") +
+      orderId +
+      " | Kapil Store",
     html: emailHtml,
   });
 }
