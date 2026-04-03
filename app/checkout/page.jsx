@@ -496,52 +496,57 @@ export default function CheckoutPage() {
                   {/* Razorpay Option */}
                   <div
                     onClick={() => setPaymentMethod("razorpay")}
-                    className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition ${
+                    className={`flex flex-col gap-2 p-4 rounded-xl border cursor-pointer transition ${
                       paymentMethod === "razorpay"
-                        ? "border-[#17d492] bg-[#17d492]/10"
+                        ? "border-yellow-500/50 bg-yellow-500/5"
                         : "border-white/10 hover:border-white/20"
                     }`}
                   >
-                    <div
-                      className={`mt-0.5 w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center transition ${
-                        paymentMethod === "razorpay"
-                          ? "border-[#17d492]"
-                          : "border-slate-500"
-                      }`}
-                    >
-                      {paymentMethod === "razorpay" && (
-                        <p className="text-xs text-yellow-400 mt-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2">
-      ⚠️ Online payment is temporarily unavailable. Please use Cash on Delivery.
-    </p>
- 
-                      )}
-                    </div>
-                    <MdPayment
-                      size={20}
-                      className={`shrink-0 mt-0.5 transition ${
-                        paymentMethod === "razorpay"
-                          ? "text-[#17d492]"
-                          : "text-slate-500"
-                      }`}
-                    />
-                    <div className="flex-1">
-                      <p
-                        className={`font-bold text-sm transition ${
+                    <div className="flex items-start gap-4">
+                      <div
+                        className={`mt-0.5 w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center transition ${
                           paymentMethod === "razorpay"
-                            ? "text-white"
-                            : "text-slate-400"
+                            ? "border-yellow-400"
+                            : "border-slate-500"
                         }`}
                       >
-                        Pay Online — UPI / Cards / Net Banking / Wallets
-                      </p>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        GPay, PhonePe, Paytm, Credit/Debit Cards & more
-                      </p>
+                        {paymentMethod === "razorpay" && (
+                          <div className="w-2 h-2 rounded-full bg-yellow-400" />
+                        )}
+                      </div>
+                      <MdPayment
+                        size={20}
+                        className={`shrink-0 mt-0.5 transition ${
+                          paymentMethod === "razorpay"
+                            ? "text-slate-400"
+                            : "text-slate-500"
+                        }`}
+                      />
+                      <div className="flex-1">
+                        <p
+                          className={`font-bold text-sm transition ${
+                            paymentMethod === "razorpay"
+                              ? "text-slate-400 line-through"
+                              : "text-slate-400"
+                          }`}
+                        >
+                          Pay Online — UPI / Cards / Net Banking / Wallets
+                        </p>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          GPay, PhonePe, Paytm, Credit/Debit Cards & more
+                        </p>
+                      </div>
                     </div>
+
+                    {/* Warning shown when razorpay is selected */}
                     {paymentMethod === "razorpay" && (
-                      <span className="text-[10px] font-black px-2 py-1 rounded-lg bg-[#17d492]/20 text-[#17d492] shrink-0">
-                        SELECTED
-                      </span>
+                      <div className="flex items-start gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2 mt-1">
+                        <span className="text-yellow-400 text-sm shrink-0">⚠️</span>
+                        <p className="text-xs text-yellow-300 leading-relaxed">
+                          Online payment is temporarily unavailable. Please go back and select{" "}
+                          <span className="font-black text-yellow-400">Cash on Delivery</span>.
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -625,27 +630,27 @@ export default function CheckoutPage() {
 
               <button
                 onClick={
-                  paymentMethod === "cod" ? handleCODOrder : handlePayClick
+                  paymentMethod === "cod" ? handleCODOrder : undefined
                 }
-                disabled={loading || cart.length === 0}
+                disabled={loading || cart.length === 0 || paymentMethod === "razorpay"}
                 className={`w-full mt-5 py-4 rounded-xl font-black transition text-[#22323c] ${
-                  loading || cart.length === 0
-                    ? "bg-[#17d492]/50 cursor-not-allowed"
+                  loading || cart.length === 0 || paymentMethod === "razorpay"
+                    ? "bg-[#17d492]/30 cursor-not-allowed"
                     : "bg-[#17d492] hover:bg-[#14b87e] hover:-translate-y-0.5 active:scale-95 shadow-[0_10px_20px_-10px_rgba(23,212,146,0.4)]"
                 }`}
               >
                 {loading
                   ? "Placing Order..."
-                  : paymentMethod === "cod"
-                  ? `Place Order — Pay ₹${grandTotal} on Delivery`
-                  : `Pay ₹${grandTotal} Securely`}
+                  : paymentMethod === "razorpay"
+                  ? "Select Cash on Delivery to continue"
+                  : `Place Order — Pay ₹${grandTotal} on Delivery`}
               </button>
 
               <p className="text-xs text-center mt-3 text-slate-600 flex items-center justify-center gap-1">
                 <FaLock size={9} />{" "}
-                {paymentMethod === "cod"
-                  ? "No advance payment required"
-                  : "Secure Checkout powered by Razorpay"}
+                {paymentMethod === "razorpay"
+                  ? "Online payment temporarily unavailable"
+                  : "No advance payment required"}
               </p>
             </div>
           </div>
