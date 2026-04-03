@@ -510,7 +510,10 @@ export default function CheckoutPage() {
                       }`}
                     >
                       {paymentMethod === "razorpay" && (
-                        <div className="w-2 h-2 rounded-full bg-[#17d492]" />
+                        <p className="text-xs text-yellow-400 mt-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2">
+      ⚠️ Online payment is temporarily unavailable. Please use Cash on Delivery.
+    </p>
+ 
                       )}
                     </div>
                     <MdPayment
