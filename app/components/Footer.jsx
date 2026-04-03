@@ -102,16 +102,6 @@ const Footer = () => {
             © {new Date().getFullYear()} STUDENT STATIONERY. All rights
             reserved.
           </p>
-          <p className="flex items-center gap-2">
-              Built By
-            <a
-              href="https://www.linkedin.com/in/-mohammed-awaiz/"
-              target="_blank"
-              className="text-[#17d492] hover:underline underline-offset-4"
-            >
-              Mohammed Awaiz
-            </a>
-          </p>
         </div>
       </div>
     </footer>
