@@ -82,7 +82,7 @@ export async function POST(req) {
 
     await order.save();
 
-    // ── Send emails (non-blocking) ───────────────────────────────
+    // ── Send emails + Telegram (non-blocking) ────────────────────
     sendEmails({
       customer,
       cart,
@@ -90,9 +90,18 @@ export async function POST(req) {
       orderCategory,
       deliveryCharge,
       total,
-      paymentMethod,  // ← "cod" or "razorpay" now passed correctly
+      paymentMethod,
       utrNumber,
     }).catch((err) => console.error("Email error:", err));
+
+    sendTelegramNotification({
+      orderId,
+      customer,
+      total,
+      paymentMethod,
+      cart,
+      deliveryCharge,
+    }).catch((err) => console.error("Telegram error:", err));
 
     return Response.json(
       { message: "Order placed successfully", orderId },
@@ -107,7 +116,53 @@ export async function POST(req) {
   }
 }
 
-// ── Email helper ──────────────────────────────────────────────────
+// ── Telegram Notification ─────────────────────────────────────────
+async function sendTelegramNotification({ orderId, customer, total, paymentMethod, cart, deliveryCharge }) {
+  if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_CHAT_ID) return;
+
+  const isCOD = paymentMethod === "cod";
+
+  const itemsList = cart
+    .map((item) => "  • " + item.title + " x" + item.quantity + " = ₹" + item.price * item.quantity)
+    .join("\n");
+
+  const message = [
+    "🛍️ *New Order — Kapil Store*",
+    "",
+    "📦 Order: `" + orderId + "`",
+    "💳 Payment: " + (isCOD ? "💵 CASH ON DELIVERY" : "✅ PAID ONLINE"),
+    "",
+    "👤 *Customer*",
+    "Name: " + customer.name,
+    "Phone: " + customer.phone,
+    "Email: " + (customer.email || "N/A"),
+    "Jamia Student: " + (customer.isJamiaStudent ? "Yes" : "No"),
+    "Address: " + customer.address,
+    "",
+    "🧾 *Items*",
+    itemsList,
+    "",
+    "🚚 Delivery: ₹" + deliveryCharge,
+    "💰 *Total: ₹" + total + "*",
+    "",
+    isCOD ? "⚠️ Collect ₹" + total + " cash at delivery" : "✅ Payment received",
+  ].join("\n");
+
+  await fetch(
+    "https://api.telegram.org/bot" + process.env.TELEGRAM_BOT_TOKEN + "/sendMessage",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: process.env.TELEGRAM_CHAT_ID,
+        text: message,
+        parse_mode: "Markdown",
+      }),
+    }
+  );
+}
+
+// ── Email Helper ──────────────────────────────────────────────────
 async function sendEmails({
   customer,
   cart,
@@ -196,17 +251,17 @@ async function sendEmails({
       : "Rs." + deliveryCharge;
 
   // COD or Online payment banner
- const paymentBanner = isCOD
-  ? '<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin:0 0 20px;">' +
-    '<p style="margin:0;font-size:14px;color:#92400e;font-weight:700;">💵 Cash on Delivery</p>' +
-    '<p style="margin:6px 0 0;font-size:13px;color:#92400e;">Please keep <strong>Rs.' +
-    total +
-    "</strong> ready when your order arrives. Exact change preferred.</p>" +
-    "</div>"
-  : '<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin:0 0 20px;">' +
-    '<p style="margin:0;font-size:14px;color:#92400e;font-weight:700;">⚠️ Online Payment Temporarily Unavailable</p>' +
-    '<p style="margin:6px 0 0;font-size:13px;color:#92400e;">We are currently only accepting Cash on Delivery. Please place a new order and select COD as your payment method.</p>' +
-    "</div>";
+  const paymentBanner = isCOD
+    ? '<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin:0 0 20px;">' +
+      '<p style="margin:0;font-size:14px;color:#92400e;font-weight:700;">💵 Cash on Delivery</p>' +
+      '<p style="margin:6px 0 0;font-size:13px;color:#92400e;">Please keep <strong>Rs.' +
+      total +
+      "</strong> ready when your order arrives. Exact change preferred.</p>" +
+      "</div>"
+    : '<div style="background:#dcfce7;border:1px solid #bbf7d0;border-radius:10px;padding:14px 18px;margin:0 0 20px;">' +
+      '<p style="margin:0;font-size:14px;color:#166534;font-weight:700;">✅ Payment Confirmed</p>' +
+      '<p style="margin:6px 0 0;font-size:13px;color:#166534;">Your payment has been received. Your order is being processed.</p>' +
+      "</div>";
 
   const year = new Date().getFullYear();
 
@@ -226,16 +281,13 @@ async function sendEmails({
     customer.phone +
     "</strong> to confirm delivery." +
     "</p>" +
-    // Order ID box
     '<div style="background:#1a2830;border-radius:10px;padding:16px 20px;margin:0 0 20px;border:1px solid #17d49230;">' +
     '<p style="margin:0 0 4px;font-size:11px;color:#17d492;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;">Order ID</p>' +
     '<p style="margin:0;font-size:22px;font-weight:900;font-family:monospace;color:#fff;">' +
     orderId +
     "</p>" +
     "</div>" +
-    // COD or payment banner
     paymentBanner +
-    // Items table
     '<table style="width:100%;border-collapse:collapse;margin:0 0 8px;">' +
     itemRows +
     "<tr>" +
