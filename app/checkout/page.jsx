@@ -109,27 +109,7 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      const orderRes = await fetch("/api/order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customer: { ...form, isJamiaStudent },
-          cart,
-          total: grandTotal,
-          deliveryCharge,
-          paymentMethod: "razorpay",
-          paymentStatus: "pending_verification",
-        }),
-      });
-
-      const orderData = await orderRes.json();
-
-      if (!orderRes.ok) {
-        throw new Error(orderData.message || "Failed to create order");
-      }
-
-      const internalOrderId = orderData.orderId;
-
+      // Step 1 — Only create Razorpay order (no DB save, no email yet)
       const rzpRes = await fetch("/api/payment/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -157,37 +137,46 @@ export default function CheckoutPage() {
         },
         notes: {
           address: form.address,
-          internalOrderId,
         },
         theme: { color: "#17d492" },
 
         handler: async (response) => {
-          const verifyRes = await fetch("/api/payment/verify", {
+          // Step 2 — Payment done, now save order + send email
+          const orderRes = await fetch("/api/order", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              orderId: internalOrderId,
+              customer: { ...form, isJamiaStudent },
+              cart,
+              total: grandTotal,
+              deliveryCharge,
+              paymentMethod: "razorpay",
+              paymentStatus: "paid",
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
             }),
           });
 
-          const verifyData = await verifyRes.json();
+          const orderData = await orderRes.json();
 
-          if (verifyRes.ok && verifyData.success) {
-            setPlacedOrderId(internalOrderId);
-            setCodSuccess(false);
-            setSuccess(true);
-            clearCart();
-            setForm({ name: "", phone: "", email: "", address: "" });
-          } else {
+          if (!orderRes.ok) {
+            // Payment was successful but order save failed
+            // Still show success but log the error
+            console.error("Order save failed after payment:", orderData);
             alert(
-              "Payment verification failed. Please contact support with Payment ID: " +
+              "Payment successful but order save failed. Please contact support with Payment ID: " +
                 response.razorpay_payment_id,
             );
+            setLoading(false);
+            return;
           }
 
+          setPlacedOrderId(orderData.orderId);
+          setCodSuccess(false);
+          setSuccess(true);
+          clearCart();
+          setForm({ name: "", phone: "", email: "", address: "" });
           setLoading(false);
         },
 
