@@ -96,7 +96,7 @@ export default function ProfilePage() {
 
         {saved && (
           <div className="mb-6 bg-[#17d492]/10 border border-[#17d492]/30 text-[#17d492] rounded-xl px-4 py-3 font-bold text-sm animate-slide-in">
-            ✅ Profile updated successfully!
+             Profile updated successfully!
           </div>
         )}
 
