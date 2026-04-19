@@ -4,20 +4,20 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 const BLINK_TERMS = [
-  "🟢 Open 24/7 for Jamia Students",
-  "🖨️ Lowest Printout Price Within Jamia — Just ₹4/Colour Page",
-  "📦 All Stationery Items at the Lowest Price",
-  "🚚 Free Delivery for Jamia Students",
+  " Open 24/7 for Jamia Students",
+  " Lowest Printout Price Within Jamia — Just ₹4/Colour Page",
+  " All Stationery Items at the Lowest Price",
+  " Free Delivery for Jamia Students",
 ];
 
 const SERVICES = [
-  { label: "📚 Tuition", href: "/others#tuition" },
-  { label: "✍️ Assignment", href: "/others#assignment" },
-  { label: "🖊️ Stationery", href: "/stationery" },
-  { label: "🏠 Room / PG", href: "/others#earn-rent" },
-  { label: "🔧 Rent Services", href: "/others#earn-rent" },
-  { label: "📄 PYQs", href: "/pyqs" },
-  { label: "🖨️ Xerox Services", href: "/stationery#xerox-printout" },
+  { label: " Tuition", href: "/others#tuition" },
+  { label: " Assignment", href: "/others#assignment" },
+  { label: " Stationery", href: "/stationery" },
+  { label: " Room / PG", href: "/others#earn-rent" },
+  { label: " Rent Services", href: "/others#earn-rent" },
+  { label: " PYQs", href: "/pyqs" },
+  { label: " Xerox Services", href: "/stationery#xerox-printout" },
 ];
 
 const ASSIGNMENT_BULLETS = [
@@ -203,7 +203,7 @@ const Hero = () => {
 
           {/* Blinking info card */}
           <div className="blink-card">
-            <div className="blink-icon">📢</div>
+            <div className="blink-icon"></div>
             <p
               className="blink-text"
               style={{ opacity: visible ? 1 : 0, transition: "opacity 0.4s ease" }}
