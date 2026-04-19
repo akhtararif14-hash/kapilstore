@@ -374,13 +374,8 @@ const Hero = () => {
 
             <h1 className="text-4xl md:text-6xl font-black leading-[1.1] tracking-tight">
               The Official Superstore <br />
-              <span className="text-[#17d492]">for Students</span>
+              <span className="text-[#17d492]">Assignment & Stationary Hub</span>
             </h1>
-
-            <p className="mt-2 text-sm md:text-[18px] font-medium text-slate-300">
-              100% Halal Food • groceries • Assignments • PYQs • Stationery •
-              Cosmetics • etc.
-            </p>
             <p className="mt-1 text-xl md:text-2xl font-medium text-slate-300">
               by Kapil Gupta
             </p>
