@@ -256,26 +256,6 @@ const Hero = () => {
 
           {/* Content */}
           <div className="w-full md:w-1/2  md:text-left">
-            
-
-           <div><h1 className="text-4xl md:text-6xl font-black leading-[1.1] tracking-tight">
-              The Official Superstore <br />
-              
-            </h1>
-            <h3 className="text-[#17d492]">Assignment & Stationary Hub</h3></div> 
-            <p className="mt-2 text-sm md:text-[18px] font-medium text-slate-300">
-              • Tution • Assignments • Stationary • PYQs • Romm/PG • Rent Services • Xerox Services • etc.
-            </p>
-            <p className="mt-1 text-xl md:text-2xl font-medium text-slate-300">
-              by Kapil Gupta
-            </p>
-
-            {/* Typewriter */}
-            <div className="md:mt-4 h-10 flex items-center justify-center md:justify-start">
-              <p className="text-md md:text-xl font-mono text-[#17d492] border-r-2 border-[#17d492] pr-1 animate-caret">
-                {text}
-              </p>
-            </div>
 
             {/* ── UNIVERSAL SEARCH BAR ── */}
             <div className="mt-8 relative" ref={searchRef}>
