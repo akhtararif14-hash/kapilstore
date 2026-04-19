@@ -131,7 +131,7 @@ const Hero = () => {
           {/* Stats row */}
           <div className="stats-row">
             <div className="stat">
-              <span className="stat-num">500+</span>
+              <span className="stat-num">2000+</span>
               <span className="stat-label">Students Served</span>
             </div>
             <div className="stat-divider" />
@@ -362,33 +362,33 @@ const Hero = () => {
 
         /* ─── Services heading ─── */
         .services-heading {
-          font-size: 11px;
-          text-transform: uppercase;
-          letter-spacing: 0.12em;
-          color: #475569;
-          font-family: 'Courier New', monospace;
-          font-weight: 600;
-        }
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #94a3b8;
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+}
 
         /* ─── Chips ─── */
         .chips-row {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          margin-top: -8px;
-        }
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-top: -8px;
+}
         .chip {
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 999px;
-          padding: 8px 18px;
-          font-size: 13px;
-          color: #94a3b8;
-          cursor: pointer;
-          transition: all 0.2s;
-          white-space: nowrap;
-          font-family: 'Georgia', serif;
-        }
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px;
+  padding: 8px 26px;
+  font-size: 13px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  font-family: 'Georgia', serif;
+}
         .chip:hover {
           background: rgba(23,212,146,0.1);
           border-color: rgba(23,212,146,0.4);
