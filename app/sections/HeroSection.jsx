@@ -1,23 +1,22 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 const BLINK_TERMS = [
-  " Open 24/7 for Jamia Students",
-  " Lowest Printout Price Within Jamia — Just ₹4/Colour Page",
-  " All Stationery Items at the Lowest Price",
-  " Free Delivery for Jamia Students",
+  "Open 24/7 for Jamia Students",
+  "Lowest Printout Price Within Jamia — Just ₹4/Colour Page",
+  "All Stationery Items at the Lowest Price",
+  "Free Delivery for Jamia Students",
 ];
 
 const SERVICES = [
-  { label: " Tuition", href: "/others#tuition" },
-  { label: " Assignment", href: "/others#assignment" },
-  { label: " Stationery", href: "/stationery" },
-  { label: " Room / PG", href: "/others#earn-rent" },
-  { label: " Rent Services", href: "/others#earn-rent" },
-  { label: " PYQs", href: "/pyqs" },
-  { label: " Xerox Services", href: "/stationery#xerox-printout" },
+  { label: "Tuition", href: "/others#tuition" },
+  { label: "Assignment", href: "/others#assignment" },
+  { label: "Stationery", href: "/stationery" },
+  { label: "Room / PG", href: "/others#earn-rent" },
+  { label: "Rent Services", href: "/others#earn-rent" },
+  { label: "PYQs", href: "/pyqs" },
+  { label: "Xerox Services", href: "/others#printout-scan" },
 ];
 
 const ASSIGNMENT_BULLETS = [
@@ -32,55 +31,10 @@ const ASSIGNMENT_BULLETS = [
   "Drawing & Sketching Work",
 ];
 
-const SEARCH_ROUTES = [
-  { keywords: ["stationery", "notebook", "pen", "pencil", "calculator", "drawing", "file", "folder", "xerox", "printout", "print"], href: "/stationery" },
-  { keywords: ["notebook", "books", "copy"], href: "/stationery" },
-  { keywords: ["pen", "pens", "ball pen", "gel pen"], href: "/stationery" },
-  { keywords: ["calculator"], href: "/stationery" },
-  { keywords: ["drawing material", "compass", "scale", "geometry"], href: "/stationery" },
-  { keywords: ["btech", "polytechnic", "engineering material"], href: "/stationery" },
-  { keywords: ["xerox", "printout", "scan", "photocopy"], href: "/stationery" },
-  { keywords: ["assignment", "ignou", "handwritten", "typed", "project", "ppt", "presentation", "thesis", "drawing work"], href: "/others#assignment" },
-  { keywords: ["tuition", "tutor", "coaching", "home tuition", "entrance exam", "exam form"], href: "/others#tuition" },
-  { keywords: ["rent", "pg", "room", "hostel", "electronics rent", "calculator rent"], href: "/others#earn-rent" },
-  { keywords: ["pyq", "previous year", "question paper", "past paper", "exam paper"], href: "/pyqs" },
-  { keywords: ["laundry", "washing", "clothes wash"], href: "/others#student-services" },
-  { keywords: ["resume", "cv", "curriculum vitae"], href: "/others#student-services" },
-  { keywords: ["laptop repair", "mobile repair", "phone repair"], href: "/others#student-services" },
-  { keywords: ["shoes", "footwear", "slippers", "bags", "bag"], href: "/others#shoes-bags" },
-  { keywords: ["medicine", "medical", "pharmacy", "chemist", "skincare", "cosmetics", "makeup"], href: "/others#chemist" },
-  { keywords: ["utensil", "kitchen", "cooking"], href: "/others#utensils" },
-  { keywords: ["leave", "absence", "application", "letter", "leave application"], href: "/others#leave-absence" },
-  { keywords: ["clothes", "wear", "shirt", "jeans"], href: "/others#clothes" },
-  { keywords: ["others", "services", "all services"], href: "/others" },
-  { keywords: ["contact", "call", "whatsapp"], href: "/contact" },
-  { keywords: ["about", "kapil", "founder"], href: "/#aboutme" },
-];
-
-function findRoute(query) {
-  const q = query.toLowerCase().trim();
-  if (!q) return null;
-  let bestMatch = null;
-  let bestScore = 0;
-  for (const route of SEARCH_ROUTES) {
-    for (const keyword of route.keywords) {
-      if (q.includes(keyword) || keyword.includes(q)) {
-        const score = keyword.length;
-        if (score > bestScore) { bestScore = score; bestMatch = route.href; }
-      }
-    }
-  }
-  return bestMatch;
-}
-
 const Hero = () => {
-  const router = useRouter();
   const [blinkIndex, setBlinkIndex] = useState(0);
   const [visible, setVisible] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const searchRef = useRef(null);
 
-  // Rotating blink terms
   useEffect(() => {
     const interval = setInterval(() => {
       setVisible(false);
@@ -91,26 +45,6 @@ const Hero = () => {
     }, 2800);
     return () => clearInterval(interval);
   }, []);
-
-  // Close suggestions on outside click
-  useEffect(() => {
-    const handler = (e) => {
-      if (searchRef.current && !searchRef.current.contains(e.target))
-        setShowSuggestions(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const [showSuggestions, setShowSuggestions] = useState(false);
-
-  const handleSearch = (q = searchQuery) => {
-    const query = q.trim();
-    if (!query) return;
-    const route = findRoute(query);
-    setShowSuggestions(false);
-    router.push(route || `/stationery?search=${encodeURIComponent(query)}`);
-  };
 
   return (
     <section className="hero-root">
@@ -124,12 +58,6 @@ const Hero = () => {
 
         {/* ── Left column ── */}
         <div className="hero-left">
-
-          {/* Badge */}
-          <div className="badge">
-            <span className="badge-dot" />
-            Trusted by Jamia Students Since Day One
-          </div>
 
           {/* Main heading */}
           <h1 className="heading">
@@ -146,7 +74,7 @@ const Hero = () => {
 
           {/* Credit */}
           <p className="credit">
-            Curated &amp; Managed by{" "}
+            by{" "}
             <Link href="/#aboutme" className="credit-name">
               Kapil Gupta
             </Link>
@@ -164,10 +92,14 @@ const Hero = () => {
 
           {/* CTA buttons */}
           <div className="cta-row">
-            <Link href="#products">
+            <Link href="/stationery">
               <button className="btn-primary">Explore Products</button>
             </Link>
-            <Link href="/#aboutme">
+            <Link
+              href="https://wa.me/917982670413"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <button className="btn-secondary">Contact Kapil</button>
             </Link>
           </div>
@@ -176,23 +108,8 @@ const Hero = () => {
         {/* ── Right column ── */}
         <div className="hero-right">
 
-          {/* Search bar */}
-          <div className="search-wrap" ref={searchRef}>
-            <input
-              className="search-input"
-              placeholder="Search assignments, stationery, PYQs…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              onFocus={() => setShowSuggestions(true)}
-            />
-            <button className="search-btn" onClick={() => handleSearch()}>
-              Search
-            </button>
-          </div>
-
-          {/* Service chips */}
-          <div className="chips-label">Our Services</div>
+          {/* Services highlight */}
+          <div className="services-heading">Our Services</div>
           <div className="chips-row">
             {SERVICES.map((s) => (
               <Link key={s.label} href={s.href}>
@@ -203,7 +120,6 @@ const Hero = () => {
 
           {/* Blinking info card */}
           <div className="blink-card">
-            <div className="blink-icon"></div>
             <p
               className="blink-text"
               style={{ opacity: visible ? 1 : 0, transition: "opacity 0.4s ease" }}
@@ -296,7 +212,7 @@ const Hero = () => {
           z-index: 10;
           max-width: 1200px;
           margin: 0 auto;
-          padding: 80px 24px;
+          padding: 100px 24px 80px;
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 64px;
@@ -307,35 +223,8 @@ const Hero = () => {
           .hero-inner {
             grid-template-columns: 1fr;
             gap: 48px;
-            padding: 60px 20px;
+            padding: 80px 20px 60px;
           }
-        }
-
-        /* ─── Badge ─── */
-        .badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          background: rgba(23,212,146,0.1);
-          border: 1px solid rgba(23,212,146,0.25);
-          border-radius: 999px;
-          padding: 6px 16px;
-          font-size: 12px;
-          font-family: 'Courier New', monospace;
-          color: #17d492;
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
-          margin-bottom: 24px;
-        }
-        .badge-dot {
-          width: 7px; height: 7px;
-          background: #17d492;
-          border-radius: 50%;
-          animation: pulse 1.8s ease-in-out infinite;
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.4; transform: scale(0.7); }
         }
 
         /* ─── Heading ─── */
@@ -471,51 +360,22 @@ const Hero = () => {
           padding-top: 8px;
         }
 
-        /* ─── Search ─── */
-        .search-wrap {
-          display: flex;
-          background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 12px;
-          overflow: hidden;
-          backdrop-filter: blur(12px);
-        }
-        .search-input {
-          flex: 1;
-          background: transparent;
-          border: none;
-          outline: none;
-          padding: 14px 18px;
-          font-size: 14px;
-          color: #f0f4f8;
-          font-family: 'Georgia', serif;
-        }
-        .search-input::placeholder { color: #475569; }
-        .search-btn {
-          background: #17d492;
-          color: #0d1f2d;
-          border: none;
-          padding: 14px 22px;
-          font-size: 13px;
-          font-weight: 700;
-          cursor: pointer;
-          letter-spacing: 0.05em;
-          transition: background 0.2s;
-        }
-        .search-btn:hover { background: #14b87e; }
-
-        /* ─── Chips ─── */
-        .chips-label {
+        /* ─── Services heading ─── */
+        .services-heading {
           font-size: 11px;
           text-transform: uppercase;
-          letter-spacing: 0.1em;
+          letter-spacing: 0.12em;
           color: #475569;
           font-family: 'Courier New', monospace;
+          font-weight: 600;
         }
+
+        /* ─── Chips ─── */
         .chips-row {
           display: flex;
           flex-wrap: wrap;
           gap: 10px;
+          margin-top: -8px;
         }
         .chip {
           background: rgba(255,255,255,0.04);
@@ -540,13 +400,13 @@ const Hero = () => {
           background: rgba(23,212,146,0.06);
           border: 1px solid rgba(23,212,146,0.2);
           border-radius: 12px;
-          padding: 18px 20px;
+          padding: 18px 24px;
+          min-height: 64px;
           display: flex;
-          align-items: flex-start;
-          gap: 14px;
-          min-height: 72px;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
         }
-        .blink-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
         .blink-text {
           font-size: 14px;
           color: #e2e8f0;
@@ -554,13 +414,14 @@ const Hero = () => {
           font-style: italic;
           line-height: 1.6;
           margin: 0;
+          text-align: center;
+          width: 100%;
         }
 
         /* ─── Stats ─── */
         .stats-row {
           display: flex;
           align-items: center;
-          gap: 0;
           background: rgba(255,255,255,0.03);
           border: 1px solid rgba(255,255,255,0.08);
           border-radius: 12px;
