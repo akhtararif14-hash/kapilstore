@@ -226,9 +226,9 @@ export default function Navbar() {
 
             {/* Desktop Nav + Search */}
             <div
-              className="hidden lg:flex items-center gap-1 flex-1 justify-center"
-              ref={searchRef}
-            >
+  className="hidden lg:flex items-center gap-0.5 justify-center flex-1"
+  ref={searchRef}
+>
               {TOP_NAV.map((item) => {
                 const hasDropdown =
                   item.id === "stationery" || item.id === "others";
@@ -326,6 +326,17 @@ export default function Navbar() {
 
             {/* Right icons */}
             <div className="flex items-center gap-3 shrink-0">
+
+               <button
+                className="lg:hidden p-2 text-white hover:text-[#17d492] transition rounded-full border border-white/15 hover:border-[#17d492]/40"
+                onClick={() => {
+                  setMobileSearchOpen((prev) => !prev);
+                  setMobileOpen(false);
+                }}
+              >
+                <FaSearch size={15} />
+              </button>
+              
               <Link
                 href="/cart"
                 className="relative p-2 text-white hover:text-[#17d492] transition"
@@ -337,17 +348,7 @@ export default function Navbar() {
                   </span>
                 )}
               </Link>
-
-              {/* Mobile search icon */}
-              <button
-                className="lg:hidden p-2 text-white hover:text-[#17d492] transition rounded-full border border-white/15 hover:border-[#17d492]/40"
-                onClick={() => {
-                  setMobileSearchOpen((prev) => !prev);
-                  setMobileOpen(false);
-                }}
-              >
-                <FaSearch size={15} />
-              </button>
+             
 
               {session ? (
                 <div className="relative hidden lg:block">
