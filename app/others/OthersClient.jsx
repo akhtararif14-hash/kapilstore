@@ -186,6 +186,26 @@ const SECTIONS = [
   //   ],
   // },
   {
+    id: "Xerox & Printout",
+    title: "Xerox & Printout",
+    color: "#06d410",
+    bgColor: "bg-cyan-500/10",
+    borderColor: "border-cyan-500/20",
+    contact: true,
+    items: [
+      "Document Copying",
+      "Printing Services",
+      "Binding Services",
+      "Scan to Email Service",
+      "Thesis / Project Printing",
+      "ID Card Printing",
+      "Resume / CV Printing",
+      "Assignment Printing",
+      "Photocopying Services",
+
+    ],
+  },
+  {
     id: "tuition",
     title: "Tuition Services",
     color: "#06b6d4",

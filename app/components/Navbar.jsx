@@ -49,6 +49,12 @@ const TOP_NAV = [
     href: "/others#assignment",
   },
   {
+    id: "xerox",
+    label: "Xerox & Printout",
+    // Icon: FaPrint,
+    href: "/stationery#xerox-printout",
+  },
+  {
     id: "tuition",
     label: "Tution Services ",
     // Icon: FaChalkboardTeacher,
