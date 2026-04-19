@@ -249,7 +249,7 @@ const Hero = () => {
       {/* Background glow */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#17d492]/10 blur-[120px] rounded-full -mr-64 -mt-64 pointer-events-none" />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 py-20 w-full">
+      <div className="relative z-10 max-w-7xl mx-auto px-6  w-full">
         <div className="flex flex-col-reverse md:flex-row items-center gap-12 lg:gap-20">
           {/* Image */}
           
