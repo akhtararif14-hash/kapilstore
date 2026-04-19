@@ -17,7 +17,7 @@ const Footer = () => {
               Kapil<span className="text-white"> Store</span>
             </h2>
             <p className="text-sm mt-4 text-slate-400 leading-relaxed font-medium">
-              Jamia Students ka All-in-One Online Store Food • xerox •
+              Jamia Students ka All-in-One Online Store • Xerox •
               Stationery • Essentials Fast Delivery | Lowest Prices | Student
               Powered Built by a Jamia Student for Jamia Students
             </p>

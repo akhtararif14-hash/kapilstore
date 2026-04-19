@@ -103,8 +103,7 @@ export default function ServicesPreview() {
             All <span className="text-[#17d492]">Services</span>
           </h2>
           <p className="text-slate-400 mt-3 font-medium max-w-xl mx-auto">
-            Your one-stop student superstore — from food and groceries to
-            assignments and tuition.
+            Your one-stop student superstore — from stationery, xerox, assignments and tuition.
           </p>
         </div>
 
