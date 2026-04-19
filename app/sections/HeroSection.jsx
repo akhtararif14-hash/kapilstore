@@ -16,7 +16,7 @@ const SERVICES = [
   { label: "Room / PG", href: "/others#earn-rent" },
   { label: "Rent Services", href: "/others#earn-rent" },
   { label: "PYQs", href: "/pyqs" },
-  { label: "Xerox Services", href: "/others#assignment" }, 
+  { label: "Xerox Services", href: "/others#xerox-printout" }, 
 ];
 
 const ASSIGNMENT_BULLETS = [
