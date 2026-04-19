@@ -318,13 +318,9 @@ const Hero = () => {
 
   // Quick suggestion chips
   const QUICK_CHIPS = [
-    { label: "Food", href: "/food" },
-    { label: "groceries", href: "/groceries" },
     { label: "Stationery", href: "/stationery" },
     { label: "Assignment Help", href: "/others#assignment" },
     { label: "PYQs", href: "/pyqs" },
-    { label: "Juices", href: "/juices-shakes" },
-    { label: "Leave Application", href: "/others#leave-absence" },
     { label: "Tuition", href: "/others#tuition" },
   ];
 
@@ -378,7 +374,7 @@ const Hero = () => {
               <span className="text-[#17d492]">Assignment & Stationary Hub</span>
             </h1>
             <p className="mt-2 text-sm md:text-[18px] font-medium text-slate-300">
-              • Tution • Assignments • Stationary • PYQs •Romm/PG •Rent Services •Xerox Services • etc.
+              • Tution • Assignments • Stationary • PYQs • Romm/PG • Rent Services • Xerox Services • etc.
             </p>
             <p className="mt-1 text-xl md:text-2xl font-medium text-slate-300">
               by Kapil Gupta
