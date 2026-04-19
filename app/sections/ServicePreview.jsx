@@ -38,6 +38,18 @@ const SERVICES = [
     badge: "Popular",
   },
   {
+    id: "Xerox & Printout",
+    label: "Xerox & Printout Services",
+    desc: "Document copying, printing, binding & more",
+    Icon: FaFileAlt,
+    href: "/others#xerox-printout",
+    color: "from-gray-500/20 to-slate-500/20",
+    border: "border-gray-500/30",
+    iconBg: "bg-gray-500/15",
+    iconColor: "text-gray-400",
+    badge: null,
+  },
+  {
     id: "tuition",
     label: "Tuition Services",
     desc: "School, college, home tuition & IGNOU help",

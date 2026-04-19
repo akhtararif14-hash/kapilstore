@@ -24,7 +24,6 @@ export const metadata = {
     "Kapil Store is your one-stop destination for affordable stationery, groceries, notebooks, college assignments, and study essentials with fast delivery.",
   keywords: [
     "stationery store",
-    "grocery delivery",
     "online stationery india",
     "college assignments",
     "notebooks",
@@ -47,7 +46,7 @@ export const metadata = {
         url: "/newlogonav.png",
         width: 1200,
         height: 630,
-        alt: "Kapil Store - Stationery & Grocery Hub",
+        alt: "Kapil Store - Assignments & Stationery Hub",
       },
     ],
     locale: "en_IN",
@@ -55,7 +54,7 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Kapil Store | Stationery & Grocery Hub",
+    title: "Kapil Store | Assignments & Stationery Hub",
     description:
       "Affordable stationery and groceries for students. Fast delivery across India.",
     images: ["/newlogonav.png"],

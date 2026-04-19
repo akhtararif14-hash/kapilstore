@@ -9,7 +9,7 @@ const ProductSchema = new mongoose.Schema(
     actualPrice: { type: Number },
     unit: { type: String, default: "" },
     images: { type: [String], default: [] },
-    // grocery | food | juices-shakes | stationery | assignment | tuition | earn-rent | others
+    //stationery | assignment | tuition | earn-rent | others
     category: { type: String, required: true, default: "stationery" },
     // subcategory id e.g. "books-notebooks", "pens", "fast-food"
     subcategory: { type: String, default: "" },

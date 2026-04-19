@@ -33,17 +33,6 @@ export async function POST(req) {
       return Response.json({ message: "Invalid order total" }, { status: 400 });
     }
 
-    // ── Category detection ───────────────────────────────────────
-    const hasGrocery = cart.some((item) => item.category === "groceries");
-    const hasStationery = cart.some((item) => item.category !== "groceries");
-    const orderCategory =
-      hasGrocery && hasStationery
-        ? "mixed"
-        : hasGrocery
-          ? "groceries"
-          : "stationery";
-
-    const orderId = "ORD-" + Date.now();
 
     // ── Save order ───────────────────────────────────────────────
     const order = new Order({

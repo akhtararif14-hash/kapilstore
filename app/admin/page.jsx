@@ -432,58 +432,6 @@ function OrdersDashboard({ adminKey }) {
    ============================================================ */
 const ALL_CATEGORIES = [
   {
-    id: "grocery",
-    label: "🛒 Grocery",
-    priceOptional: false,
-    subs: [
-      { id: "dairy", label: "Dairy Products" },
-      { id: "student-daily", label: "Student Daily Use" },
-      { id: "chocolates", label: "Chocolates" },
-      { id: "dry-fruits", label: "Dry Fruits & Nuts" },
-      { id: "snacks-namkeen", label: "Snacks & Namkeen" },
-      { id: "kitchen", label: "Kitchen Ingredients" },
-      { id: "instant-food", label: "Instant Food" },
-      { id: "energy-drinks", label: "Energy Drinks" },
-      { id: "beverages", label: "Beverages" },
-      { id: "meat-fish", label: "Meat & Fish" },
-      { id: "frozen-packaged", label: "Frozen & Packaged Food" },
-      { id: "seasonal-fruits", label: "Seasonal Fruits" },
-      { id: "green-vegetables", label: "Green Vegetables" },
-      { id: "cut-fruits", label: "Cut Fruits" },
-      { id: "fruits-vegetables", label: "Fruits & Vegetables" },
-      { id: "sprouts", label: "Sprouts" },
-      { id: "coconut-water", label: "Coconut Water" },
-      { id: "healthy-fruits", label: "Healthy Fruits" },
-    ],
-  },
-  {
-    id: "food",
-    label: "🍔 Food",
-    priceOptional: false,
-    subs: [
-      { id: "fast-food", label: "Fast Food" },
-      { id: "veg-food", label: "Veg Food" },
-      { id: "non-veg-food", label: "Non Veg Food" },
-      { id: "sweets-desserts", label: "Sweets & Desserts" },
-      { id: "bakery", label: "Bakery Items" },
-      { id: "ice-cream", label: "Ice Cream" },
-      { id: "tiffin", label: "Tiffin Services" },
-    ],
-  },
-  {
-    id: "juices-shakes",
-    label: "🥤 Juices & Shakes",
-    priceOptional: false,
-    subs: [
-      { id: "fresh-juice", label: "Fresh Juice" },
-      { id: "shakes", label: "Shakes" },
-      { id: "tea-coffee", label: "Tea & Coffee" },
-      { id: "cold-drinks", label: "Cold Drinks" },
-      { id: "milkshakes", label: "Milkshakes" },
-      { id: "mocktails", label: "Mocktails" },
-    ],
-  },
-  {
     id: "stationery",
     label: "✏️ Stationery",
     priceOptional: false,
@@ -893,9 +841,6 @@ function ViewProducts({ adminKey }) {
     filter === "all" ? products : products.filter((p) => p.category === filter);
 
   const CAT_COLOR = {
-    grocery: "bg-green-500/20 text-green-400",
-    food: "bg-orange-500/20 text-orange-400",
-    "juices-shakes": "bg-yellow-500/20 text-yellow-400",
     stationery: "bg-blue-500/20 text-blue-400",
     assignment: "bg-purple-500/20 text-purple-400",
     tuition: "bg-cyan-500/20 text-cyan-400",

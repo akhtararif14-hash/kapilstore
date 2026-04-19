@@ -37,19 +37,6 @@ import { useCart } from "../context/CartContext";
 
 const TOP_NAV = [
   {
-    id: "grocery",
-    label: "Grocery",
-    Icon: FaShoppingBasket,
-    href: "/groceries",
-  },
-  { id: "food", label: "Food", Icon: FaUtensils, href: "/food" },
-  {
-    id: "juices",
-    label: "Juices & Shakes",
-    // Icon: FaGlassWhiskey,
-    href: "/juices-shakes",
-  },
-  {
     id: "stationery",
     label: "Stationery",
     // Icon: FaPencilAlt,
