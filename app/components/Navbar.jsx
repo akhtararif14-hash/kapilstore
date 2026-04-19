@@ -23,6 +23,8 @@ import {
   FaIdCard,
   FaWhatsapp,
   FaSearch,
+  FaEnvelope,
+  FaPhone,
 } from "react-icons/fa";
 import { MdDraw, MdMenuBook } from "react-icons/md";
 import { MdEventBusy } from "react-icons/md";
@@ -33,11 +35,13 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import { useCart } from "../context/CartContext";
 
 const TOP_NAV = [
+  { id: "home", label: "Home", href: "/" },
   { id: "stationery", label: "Stationery", href: "/stationery" },
   { id: "assignment", label: "Assignment Paid Service", href: "/others#assignment" },
   { id: "xerox", label: "Xerox & Printout", href: "/others#assignment" },
   { id: "tuition", label: "Tution Services", href: "/others#tuition" },
   { id: "others", label: "Others", Icon: FaEllipsisH, href: "/others" },
+  { id: "contact", label: "Contact Us", href: "/contact" },
 ];
 
 const STATIONERY_SUBS = [
@@ -92,6 +96,21 @@ const OTHERS_SECTIONS = [
   },
 ];
 
+const CONTACT_INFO = [
+  {
+    label: "+91 7982670413",
+    href: "https://wa.me/917982670413",
+    Icon: FaWhatsapp,
+    sublabel: "WhatsApp / Call",
+  },
+  {
+    label: "kapilstore@gmail.com",
+    href: "mailto:kapilstore@gmail.com",
+    Icon: FaEnvelope,
+    sublabel: "Email Us",
+  },
+];
+
 const SEARCH_ROUTES = [
   { keywords: ["stationery", "notebook", "pen", "pencil", "calculator", "drawing", "file", "folder", "xerox", "printout", "print"], href: "/stationery" },
   { keywords: ["notebook", "books", "copy"], href: "/stationery" },
@@ -111,7 +130,7 @@ const SEARCH_ROUTES = [
   { keywords: ["shoes", "footwear", "slippers", "bags", "bag"], href: "/others#shoes-bags" },
   { keywords: ["leave", "absence", "application", "letter", "leave application"], href: "/others#leave-absence" },
   { keywords: ["others", "services", "all services"], href: "/others" },
-  { keywords: ["contact", "call", "whatsapp"], href: "/contact" },
+  { keywords: ["contact", "call", "whatsapp", "email"], href: "/contact" },
 ];
 
 function findRoute(query) {
@@ -135,7 +154,7 @@ function findRoute(query) {
 
 const QUICK_CHIPS = [
   { label: "Stationery", href: "/stationery" },
-  { label: "Xerox & Printout", href: "/others#printout-scan" },
+  { label: "Xerox & Printout", href: "/others#assignment" },
   { label: "Assignment Help", href: "/others#assignment" },
   { label: "PYQs", href: "/pyqs" },
   { label: "Tuition", href: "/others#tuition" },
@@ -211,7 +230,7 @@ export default function Navbar() {
         ref={dropdownRef}
       >
         <div className="max-w-7xl mx-auto px-4 md:px-6">
-         <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center justify-between gap-2">
 
             {/* Logo */}
             <Link href="/" className="shrink-0">
@@ -226,12 +245,14 @@ export default function Navbar() {
 
             {/* Desktop Nav + Search */}
             <div
-  className="hidden lg:flex items-center gap-0.5 justify-center flex-1 mx-auto"
-  ref={searchRef}
->
+              className="hidden lg:flex items-center gap-0.5 justify-center flex-1 mx-auto"
+              ref={searchRef}
+            >
               {TOP_NAV.map((item) => {
                 const hasDropdown =
-                  item.id === "stationery" || item.id === "others";
+                  item.id === "stationery" ||
+                  item.id === "others" ||
+                  item.id === "contact";
                 const isActive = activeDropdown === item.id;
 
                 if (hasDropdown) {
@@ -260,12 +281,13 @@ export default function Navbar() {
                     href={item.href}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider text-slate-300 hover:text-[#17d492] hover:bg-white/5 transition-all"
                   >
+                    {item.id === "home" && <FaHome size={11} />}
                     <span>{item.label}</span>
                   </Link>
                 );
               })}
 
-              {/* Desktop Search Bar — after Others */}
+              {/* Desktop Search Bar */}
               <div className="relative ml-2">
                 <div className="flex items-center bg-white/8 border border-white/10 rounded-xl px-3 py-2 gap-2 w-52 focus-within:border-[#17d492]/50 focus-within:bg-white/10 transition-all">
                   <FaSearch size={12} className="text-slate-500 shrink-0" />
@@ -327,7 +349,7 @@ export default function Navbar() {
             {/* Right icons */}
             <div className="flex items-center gap-3 shrink-0">
 
-               <button
+              <button
                 className="lg:hidden p-2 text-white hover:text-[#17d492] transition rounded-full border border-white/15 hover:border-[#17d492]/40"
                 onClick={() => {
                   setMobileSearchOpen((prev) => !prev);
@@ -348,7 +370,6 @@ export default function Navbar() {
                   </span>
                 )}
               </Link>
-             
 
               {session ? (
                 <div className="relative hidden lg:block">
@@ -510,6 +531,43 @@ export default function Navbar() {
           </div>
         )}
 
+        {/* Desktop Dropdown: Contact Us */}
+        {activeDropdown === "contact" && (
+          <div className="hidden lg:block absolute top-full left-0 right-0 bg-[#1a2830] border-t border-[#17d492]/10 shadow-2xl z-40">
+            <div className="max-w-7xl mx-auto px-6 py-6">
+              <div className="flex items-center gap-3 mb-5">
+                <FaPhone className="text-[#17d492]" size={16} />
+                <h3 className="text-lg font-black text-[#17d492]">Contact Us</h3>
+              </div>
+              <div className="flex gap-4">
+                {CONTACT_INFO.map((item) => {
+                  const { Icon } = item;
+                  return (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      target={item.href.startsWith("http") ? "_blank" : undefined}
+                      rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                      onClick={() => setActiveDropdown(null)}
+                      className="flex items-center gap-3 px-5 py-4 rounded-xl text-slate-300 hover:text-[#17d492] hover:bg-[#17d492]/8 border border-white/8 hover:border-[#17d492]/25 transition-all group"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-[#17d492]/10 flex items-center justify-center group-hover:bg-[#17d492]/20 transition">
+                        <Icon size={16} className="text-[#17d492]" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-0.5">
+                          {item.sublabel}
+                        </p>
+                        <p className="text-sm font-black">{item.label}</p>
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Mobile Menu */}
         <div
           className={`lg:hidden fixed inset-x-0 top-[60px] bottom-0 bg-[#1a2830] overflow-y-auto transition-all duration-300 z-40 ${
@@ -521,13 +579,17 @@ export default function Navbar() {
           <div className="p-4 space-y-1">
             {TOP_NAV.map((item) => {
               const hasDropdown =
-                item.id === "stationery" || item.id === "others";
+                item.id === "stationery" ||
+                item.id === "others" ||
+                item.id === "contact";
               const isExpanded = mobileExpanded === item.id;
               const subItems =
                 item.id === "stationery"
                   ? STATIONERY_SUBS
                   : item.id === "others"
                   ? OTHERS_SECTIONS.flatMap((s) => s.links)
+                  : item.id === "contact"
+                  ? CONTACT_INFO.map((c) => ({ ...c, label: c.label, href: c.href }))
                   : [];
 
               return (
@@ -553,9 +615,11 @@ export default function Navbar() {
                           {subItems.map((sub) => {
                             const SubIcon = sub.Icon;
                             return (
-                              <Link
+                              <a
                                 key={sub.href}
                                 href={sub.href}
+                                target={sub.href.startsWith("http") ? "_blank" : undefined}
+                                rel={sub.href.startsWith("http") ? "noopener noreferrer" : undefined}
                                 onClick={() => setMobileOpen(false)}
                                 className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg text-sm text-slate-400 hover:text-[#17d492] hover:bg-[#17d492]/5 transition"
                               >
@@ -564,16 +628,18 @@ export default function Navbar() {
                                   className="text-[#17d492]/50 shrink-0"
                                 />
                                 {sub.label}
-                              </Link>
+                              </a>
                             );
                           })}
-                          <Link
-                            href={item.href}
-                            onClick={() => setMobileOpen(false)}
-                            className="block px-4 py-2 text-xs text-[#17d492] font-black"
-                          >
-                            View All {item.label} →
-                          </Link>
+                          {item.id !== "contact" && (
+                            <Link
+                              href={item.href}
+                              onClick={() => setMobileOpen(false)}
+                              className="block px-4 py-2 text-xs text-[#17d492] font-black"
+                            >
+                              View All {item.label} →
+                            </Link>
+                          )}
                         </div>
                       )}
                     </>
@@ -583,6 +649,9 @@ export default function Navbar() {
                       onClick={() => setMobileOpen(false)}
                       className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-white font-black hover:text-[#17d492] hover:bg-white/5 transition"
                     >
+                      {item.id === "home" && (
+                        <FaHome size={14} className="text-[#17d492]" />
+                      )}
                       <span className="text-sm uppercase tracking-wider">
                         {item.label}
                       </span>
@@ -627,20 +696,26 @@ export default function Navbar() {
                 </button>
               )}
 
-          {/* Support section */}
-          <div className="px-4 pt-3">
-            <p className="text-xs text-slate-600 font-bold uppercase tracking-widest">
-              Support
-            </p>
-            <a
-              href="https://wa.me/917982670413"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-[#17d492] font-black mt-1 text-sm"
-            >
-              <FaWhatsapp size={14} /> +91 7982670413
-            </a>
-          </div>
+              {/* Support section */}
+              <div className="px-4 pt-3">
+                <p className="text-xs text-slate-600 font-bold uppercase tracking-widest">
+                  Support
+                </p>
+                <a
+                  href="https://wa.me/917982670413"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-[#17d492] font-black mt-1 text-sm"
+                >
+                  <FaWhatsapp size={14} /> +91 7982670413
+                </a>
+                <a
+                  href="mailto:kapilstore@gmail.com"
+                  className="flex items-center gap-2 text-[#17d492] font-black mt-1 text-sm"
+                >
+                  <FaEnvelope size={14} /> kapilstore@gmail.com
+                </a>
+              </div>
             </div>
           </div>
         </div>
