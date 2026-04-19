@@ -52,7 +52,7 @@ const TOP_NAV = [
     id: "xerox",
     label: "Xerox & Printout",
     // Icon: FaPrint,
-    href: "/stationery#xerox-printout",
+    href: "/others#printout-scan",
   },
   {
     id: "tuition",
@@ -91,11 +91,6 @@ const STATIONERY_SUBS = [
     label: "BTech & Polytechnic",
     href: "/stationery/",
     Icon: FaGraduationCap,
-  },
-  {
-    label: "Xerox / Printout",
-    href: "/stationery/",
-    Icon: FaPrint,
   },
   {
     label: "Jamia School Material",
