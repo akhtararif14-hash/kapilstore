@@ -184,16 +184,24 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // FIX 1: Lock background scroll when mobile menu is open
+  // Lock background scroll when mobile menu is open, preserving scroll position
   useEffect(() => {
     if (mobileOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = "0";
+      document.body.style.right = "0";
       document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
+      return () => {
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.left = "";
+        document.body.style.right = "";
+        document.body.style.overflow = "";
+        window.scrollTo(0, scrollY);
+      };
     }
-    return () => {
-      document.body.style.overflow = "";
-    };
   }, [mobileOpen]);
 
   useEffect(() => {
@@ -582,11 +590,12 @@ export default function Navbar() {
 
         {/* Mobile Menu */}
         <div
-          className={`lg:hidden fixed inset-x-0 top-[60px] bottom-0 bg-[#1a2830] overflow-y-auto transition-all duration-300 z-40 ${
+          className={`lg:hidden fixed inset-0 top-[60px] bg-[#1a2830] overflow-y-auto transition-all duration-300 z-40 ${
             mobileOpen
               ? "translate-x-0 opacity-100"
               : "translate-x-full opacity-0 pointer-events-none"
           }`}
+          style={{ height: "calc(100dvh - 60px)" }}
         >
           <div className="p-4 space-y-1">
             {TOP_NAV.map((item) => {
