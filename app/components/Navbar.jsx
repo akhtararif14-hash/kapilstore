@@ -104,8 +104,8 @@ const CONTACT_INFO = [
     sublabel: "WhatsApp / Call",
   },
   {
-    label: "kapilstore@gmail.com",
-    href: "mailto:kapilstore@gmail.com",
+    label: "kapilguptakapil1111@gmail.com",
+    href: "mailto:kapilguptakapil1111@gmail.com",
     Icon: FaEnvelope,
     sublabel: "Email Us",
   },
@@ -183,6 +183,18 @@ export default function Navbar() {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // FIX 1: Lock background scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -281,7 +293,7 @@ export default function Navbar() {
                     href={item.href}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider text-slate-300 hover:text-[#17d492] hover:bg-white/5 transition-all"
                   >
-                    {item.id === "home" && <FaHome size={11} />}
+                    {/* FIX 2: Home icon removed from desktop nav too for consistency */}
                     <span>{item.label}</span>
                   </Link>
                 );
@@ -644,14 +656,12 @@ export default function Navbar() {
                       )}
                     </>
                   ) : (
+                    // FIX 2: Home icon removed from mobile nav links
                     <Link
                       href={item.href}
                       onClick={() => setMobileOpen(false)}
                       className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-white font-black hover:text-[#17d492] hover:bg-white/5 transition"
                     >
-                      {item.id === "home" && (
-                        <FaHome size={14} className="text-[#17d492]" />
-                      )}
                       <span className="text-sm uppercase tracking-wider">
                         {item.label}
                       </span>
@@ -695,27 +705,6 @@ export default function Navbar() {
                   Sign in with Google
                 </button>
               )}
-
-              {/* Support section */}
-              <div className="px-4 pt-3">
-                <p className="text-xs text-slate-600 font-bold uppercase tracking-widest">
-                  Support
-                </p>
-                <a
-                  href="https://wa.me/917982670413"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-[#17d492] font-black mt-1 text-sm"
-                >
-                  <FaWhatsapp size={14} /> +91 7982670413
-                </a>
-                <a
-                  href="mailto:kapilstore@gmail.com"
-                  className="flex items-center gap-2 text-[#17d492] font-black mt-1 text-sm"
-                >
-                  <FaEnvelope size={14} /> kapilstore@gmail.com
-                </a>
-              </div>
             </div>
           </div>
         </div>
