@@ -42,7 +42,7 @@ const SERVICES = [
     label: "Xerox & Printout Services",
     desc: "Document copying, printing, binding & more",
     Icon: FaFileAlt,
-    href: "/others#xerox-printout",
+    href: "/others#assignment",
     color: "from-gray-500/20 to-slate-500/20",
     border: "border-gray-500/30",
     iconBg: "bg-gray-500/15",
