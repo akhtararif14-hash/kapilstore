@@ -15,16 +15,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export default function RootLayout({ children }) {
-  return (
-    <html lang="en" style={{ backgroundColor: "#0d1f2d" }}>
-      <body style={{ backgroundColor: "#0d1f2d", color: "#f0f4f8" }}>
-        {children}
-      </body>
-    </html>
-  );
-}
-
 export const metadata = {
   title: {
     default: "Kapil Store | Stationery, Groceries & Assignment Services",
@@ -76,10 +66,25 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" style={{ backgroundColor: "#0d1f2d" }}>
       <head>
+        {/*
+         * ✅ FIX: White flash on refresh
+         * This inline script runs BEFORE any CSS or React loads.
+         * It sets the background instantly so the browser never
+         * shows a white frame — not even for 1 millisecond.
+         */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.documentElement.style.backgroundColor = "#0d1f2d";`,
+          }}
+        />
+
         {/* Google tag (gtag.js) */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-EDP43PMXHZ"></script>
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-EDP43PMXHZ"
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -91,7 +96,10 @@ export default function RootLayout({ children }) {
           }}
         />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        style={{ backgroundColor: "#0d1f2d", color: "#f0f4f8", margin: 0 }}
+      >
         <SessionWrapper>
           <CartProvider>
             <Navbar />
