@@ -258,10 +258,11 @@ const Hero = () => {
           <div className="w-full md:w-1/2  md:text-left">
             
 
-            <h1 className="text-4xl md:text-6xl font-black leading-[1.1] tracking-tight">
+           <div><h1 className="text-4xl md:text-6xl font-black leading-[1.1] tracking-tight">
               The Official Superstore <br />
-              <h3 className="text-[#17d492]">Assignment & Stationary Hub</h3>
+              
             </h1>
+            <h3 className="text-[#17d492]">Assignment & Stationary Hub</h3></div> 
             <p className="mt-2 text-sm md:text-[18px] font-medium text-slate-300">
               • Tution • Assignments • Stationary • PYQs • Romm/PG • Rent Services • Xerox Services • etc.
             </p>
