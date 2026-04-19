@@ -12,9 +12,10 @@ import {
 } from "react-icons/fa";
 
 const words = [
-  "Mini Amazon + Blinkit + Zomato for Students",
-  "Open Everyday – 8 AM to 12 AM",
-  "Fast Delivery Within 45–90 Minutes",
+  "Open 24/7 for Stationery & Assignments",
+  "Lowest printout prices in Jamia just ₹4/colour page",
+  "All stationary items at lowest prices",
+  "Free delivery for Jamia students",
 ];
 
 // Search routing map — keyword → destination URL
@@ -376,6 +377,9 @@ const Hero = () => {
               The Official Superstore <br />
               <span className="text-[#17d492]">Assignment & Stationary Hub</span>
             </h1>
+            <p className="mt-2 text-sm md:text-[18px] font-medium text-slate-300">
+              • Tution • Assignments • Stationary • PYQs •Romm/PG •Rent Services •Xerox Services • etc.
+            </p>
             <p className="mt-1 text-xl md:text-2xl font-medium text-slate-300">
               by Kapil Gupta
             </p>
