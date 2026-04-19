@@ -15,6 +15,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en" style={{ backgroundColor: "#0d1f2d" }}>
+      <body style={{ backgroundColor: "#0d1f2d", color: "#f0f4f8" }}>
+        {children}
+      </body>
+    </html>
+  );
+}
+
 export const metadata = {
   title: {
     default: "Kapil Store | Stationery, Groceries & Assignment Services",
