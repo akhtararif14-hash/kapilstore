@@ -252,29 +252,15 @@ const Hero = () => {
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-20 w-full">
         <div className="flex flex-col-reverse md:flex-row items-center gap-12 lg:gap-20">
           {/* Image */}
-          <div className="w-full md:w-1/2 flex justify-center">
-            <div className="relative group">
-              <div className="absolute inset-0 bg-[#17d492]/20 blur-3xl rounded-full scale-75 group-hover:scale-100 transition-transform duration-500" />
-              <Image
-                src="/heroimage.jpeg"
-                alt="Kapil Store"
-                width={550}
-                height={550}
-                className="relative object-contain drop-shadow-2xl animate-bounce-slow"
-                priority
-              />
-            </div>
-          </div>
+          
 
           {/* Content */}
-          <div className="w-full md:w-1/2 text-center md:text-left">
-            <div className="inline-block px-3 py-1 rounded-full bg-[#17d492]/10 border border-[#17d492]/20 text-[#17d492] text-xs font-bold tracking-widest uppercase mb-6">
-              Official Hub
-            </div>
+          <div className="w-full md:w-1/2  md:text-left">
+            
 
             <h1 className="text-4xl md:text-6xl font-black leading-[1.1] tracking-tight">
               The Official Superstore <br />
-              <span className="text-[#17d492]">Assignment & Stationary Hub</span>
+              <h3 className="text-[#17d492]">Assignment & Stationary Hub</h3>
             </h1>
             <p className="mt-2 text-sm md:text-[18px] font-medium text-slate-300">
               • Tution • Assignments • Stationary • PYQs • Romm/PG • Rent Services • Xerox Services • etc.
