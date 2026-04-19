@@ -49,6 +49,7 @@ const SECTION_ICONS = {
   tuition: FaChalkboardTeacher,
   "student-services": MdElectricBolt,
   "shoes-bags": BsBagFill,
+  "xerox-printout": FaPrint,
   pyq: MdMenuBook,
   utensils: GiKitchenKnives,
   clothes: FaTshirt,
