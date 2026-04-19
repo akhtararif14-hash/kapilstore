@@ -35,7 +35,7 @@ import { useCart } from "../context/CartContext";
 const TOP_NAV = [
   { id: "stationery", label: "Stationery", href: "/stationery" },
   { id: "assignment", label: "Assignment Paid Service", href: "/others#assignment" },
-  { id: "xerox", label: "Xerox & Printout", href: "/others#printout-scan" },
+  { id: "xerox", label: "Xerox & Printout", href: "/others#xerox-printout" },
   { id: "tuition", label: "Tution Services", href: "/others#tuition" },
   { id: "others", label: "Others", Icon: FaEllipsisH, href: "/others" },
 ];
