@@ -211,7 +211,7 @@ export default function Navbar() {
         ref={dropdownRef}
       >
         <div className="max-w-7xl mx-auto px-4 md:px-6">
-          <div className="flex items-center justify-between gap-4">
+         <div className="flex items-center justify-between gap-2">
 
             {/* Logo */}
             <Link href="/" className="shrink-0">
@@ -226,7 +226,7 @@ export default function Navbar() {
 
             {/* Desktop Nav + Search */}
             <div
-  className="hidden lg:flex items-center gap-0.5 justify-center flex-1"
+  className="hidden lg:flex items-center gap-0.5 justify-center flex-1 mx-auto"
   ref={searchRef}
 >
               {TOP_NAV.map((item) => {
@@ -336,7 +336,7 @@ export default function Navbar() {
               >
                 <FaSearch size={15} />
               </button>
-              
+
               <Link
                 href="/cart"
                 className="relative p-2 text-white hover:text-[#17d492] transition"
@@ -690,7 +690,7 @@ export default function Navbar() {
           </div>
 
           {/* Quick chips inside mobile search */}
-          <div className="flex gap-2 mt-2.5 overflow-x-auto pb-1 scrollbar-none">
+          <div className="flex gap-2 mt-2.5 overflow-x-auto pb-1 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {QUICK_CHIPS.map((chip) => (
               <button
                 key={chip.href}
