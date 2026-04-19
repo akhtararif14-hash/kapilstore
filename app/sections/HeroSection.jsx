@@ -218,10 +218,10 @@ const Hero = () => {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
-
-  // Quick suggestion chips
+   // Quick suggestion chips
   const QUICK_CHIPS = [
     { label: "Stationery", href: "/stationery" },
+    { label: "Xerox & Printout", href: "/stationery#xerox-printout" },
     { label: "Assignment Help", href: "/others#assignment" },
     { label: "PYQs", href: "/pyqs" },
     { label: "Tuition", href: "/others#tuition" },
