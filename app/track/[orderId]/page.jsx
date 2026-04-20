@@ -6,13 +6,20 @@ import dynamic from "next/dynamic";
 const TrackingMap = dynamic(() => import("../../components/TrackingMap"), { ssr: false });
 
 const STATUS_STEPS = [
-  { key: "placed", label: "Order Placed", icon: "📋" },
-  { key: "confirmed", label: "Confirmed", icon: "✅" },
-  { key: "preparing", label: "Preparing", icon: "📦" },
-  { key: "out_for_delivery", label: "Out for Delivery", icon: "🛵" },
-  { key: "delivered", label: "Delivered", icon: "🎉" },
+  { key: "placed",           label: "Order Placed",      icon: "📋", desc: "We have received your order" },
+  { key: "confirmed",        label: "Order Confirmed",   icon: "✅", desc: "Your order has been confirmed" },
+  { key: "preparing",        label: "Preparing",         icon: "📦", desc: "Your order is being prepared" },
+  { key: "out_for_delivery", label: "Out for Delivery",  icon: "🛵", desc: "Your order is on the way" },
+  { key: "delivered",        label: "Delivered",         icon: "🎉", desc: "Order delivered successfully" },
 ];
-const STATUS_INDEX = { placed: 0, confirmed: 1, preparing: 2, out_for_delivery: 3, delivered: 4 };
+
+const STATUS_INDEX = {
+  placed: 0,
+  confirmed: 1,
+  preparing: 2,
+  out_for_delivery: 3,
+  delivered: 4,
+};
 
 export default function TrackOrderPage({ params }) {
   const { orderId } = use(params);
@@ -20,7 +27,10 @@ export default function TrackOrderPage({ params }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const intervalRef = useRef(null);
+  const autoConfirmRef = useRef(null);
+  const hasAutoConfirmed = useRef(false); // prevent firing twice
 
+  // ── Fetch order ───────────────────────────────────────────────
   const fetchOrder = async () => {
     try {
       const res = await fetch(`/api/socket?orderId=${orderId}`);
@@ -28,6 +38,7 @@ export default function TrackOrderPage({ params }) {
       const data = await res.json();
       setOrder(data);
       setError("");
+      return data;
     } catch {
       setError("Could not load order. Please check your Order ID.");
     } finally {
@@ -35,12 +46,50 @@ export default function TrackOrderPage({ params }) {
     }
   };
 
+  // ── Auto-confirm: runs only when status is "placed" ───────────
+  const autoConfirm = async () => {
+    try {
+      await fetch(`/api/socket`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          status: "confirmed",
+          message: "Your order has been automatically confirmed.",
+        }),
+      });
+      await fetchOrder(); // refresh UI immediately after
+    } catch (err) {
+      console.error("Auto-confirm failed:", err);
+    }
+  };
+
+  // ── On mount ──────────────────────────────────────────────────
   useEffect(() => {
-    fetchOrder();
+    const init = async () => {
+      const data = await fetchOrder();
+
+      // Only auto-confirm if order is still in "placed" state
+      if (data?.status === "placed" && !hasAutoConfirmed.current) {
+        hasAutoConfirmed.current = true;
+        autoConfirmRef.current = setTimeout(() => {
+          autoConfirm();
+        }, 10000); // 10 seconds after page load → auto confirm
+      }
+    };
+
+    init();
+
+    // Poll every 15 seconds to catch admin updates
     intervalRef.current = setInterval(fetchOrder, 15000);
-    return () => clearInterval(intervalRef.current);
+
+    return () => {
+      clearInterval(intervalRef.current);
+      clearTimeout(autoConfirmRef.current);
+    };
   }, [orderId]);
 
+  // ─────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="min-h-screen bg-[#22323c] flex items-center justify-center pt-20">
@@ -82,21 +131,36 @@ export default function TrackOrderPage({ params }) {
 
         {/* Status Banner */}
         <div className={`rounded-2xl p-5 mb-8 border ${
-          isCancelled ? "bg-red-500/10 border-red-500/30" :
-          isDelivered ? "bg-[#17d492]/10 border-[#17d492]/30" :
-          "bg-[#1a2830] border-white/5"
+          isCancelled
+            ? "bg-red-500/10 border-red-500/30"
+            : isDelivered
+            ? "bg-[#17d492]/10 border-[#17d492]/30"
+            : "bg-[#1a2830] border-white/5"
         }`}>
           <div className="flex items-center gap-4">
             <span className="text-4xl">
-              {isCancelled ? "❌" : STATUS_STEPS[currentStep]?.icon || "📋"}
+              {isCancelled ? "❌" : STATUS_STEPS[currentStep]?.icon}
             </span>
             <div className="flex-1">
               <p className="font-black text-lg text-[#17d492]">
                 {isCancelled ? "Order Cancelled" : STATUS_STEPS[currentStep]?.label}
               </p>
+              <p className="text-sm text-white/40 mt-0.5">
+                {isCancelled ? "Please contact us on WhatsApp" : STATUS_STEPS[currentStep]?.desc}
+              </p>
+              {/* Show auto-confirm notice when order is just placed */}
+              {order.status === "placed" && (
+                <p className="text-xs text-amber-400 mt-1.5 font-bold">
+                  ⏱ Auto-confirming your order in a few seconds...
+                </p>
+              )}
               {order.estimatedDelivery && !isCancelled && (
                 <p className="text-sm text-white/50 mt-0.5">
-                  Est. delivery: {new Date(order.estimatedDelivery).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  Est. delivery:{" "}
+                  {new Date(order.estimatedDelivery).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </p>
               )}
             </div>
@@ -112,9 +176,13 @@ export default function TrackOrderPage({ params }) {
         {/* Progress Steps */}
         {!isCancelled && (
           <div className="bg-[#1a2830] rounded-2xl p-6 mb-8 border border-white/5">
-            <h2 className="font-black text-[#17d492] mb-6 text-sm uppercase tracking-widest">Order Progress</h2>
+            <h2 className="font-black text-[#17d492] mb-6 text-sm uppercase tracking-widest">
+              Order Progress
+            </h2>
             <div className="relative">
+              {/* Background line */}
               <div className="absolute left-5 top-5 bottom-5 w-0.5 bg-white/5" />
+              {/* Progress line */}
               <div
                 className="absolute left-5 top-5 w-0.5 bg-[#17d492] transition-all duration-1000"
                 style={{ height: `${(currentStep / (STATUS_STEPS.length - 1)) * 90}%` }}
@@ -124,19 +192,52 @@ export default function TrackOrderPage({ params }) {
                   const done = idx <= currentStep;
                   const active = idx === currentStep;
                   const update = order.trackingUpdates?.find((u) => u.status === step.key);
+                  const isAdminStep = idx >= 2; // preparing, out_for_delivery, delivered = admin only
+
                   return (
                     <div key={step.key} className="flex items-start gap-4 relative">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm flex-shrink-0 z-10 transition-all duration-500 ${
-                        done ? "bg-[#17d492] text-[#22323c]" : "bg-[#22323c] text-white/20 border border-white/10"
-                      } ${active ? "ring-4 ring-[#17d492]/25 scale-110" : ""}`}>
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center text-sm flex-shrink-0 z-10 transition-all duration-500 ${
+                          done
+                            ? "bg-[#17d492] text-[#22323c]"
+                            : "bg-[#22323c] text-white/20 border border-white/10"
+                        } ${active ? "ring-4 ring-[#17d492]/25 scale-110" : ""}`}
+                      >
                         {step.icon}
                       </div>
-                      <div className="pt-2">
-                        <p className={`font-black text-sm ${done ? "text-white" : "text-white/20"}`}>{step.label}</p>
-                        {update && (
-                          <p className="text-xs text-slate-500 mt-0.5">
-                            {update.message} · {new Date(update.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      <div className="pt-2 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className={`font-black text-sm ${done ? "text-white" : "text-white/20"}`}>
+                            {step.label}
                           </p>
+                          {/* Show "Auto" badge on first two steps */}
+                          {idx === 0 && (
+                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-[#17d492]/20 text-[#17d492]">
+                              AUTO
+                            </span>
+                          )}
+                          {idx === 1 && (
+                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-[#17d492]/20 text-[#17d492]">
+                              AUTO
+                            </span>
+                          )}
+                          {/* Show "Admin" badge on remaining steps */}
+                          {isAdminStep && !done && (
+                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-white/5 text-white/20">
+                              BY ADMIN
+                            </span>
+                          )}
+                        </div>
+                        {update ? (
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            {update.message} ·{" "}
+                            {new Date(update.timestamp).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-white/15 mt-0.5">{step.desc}</p>
                         )}
                       </div>
                     </div>
@@ -150,7 +251,9 @@ export default function TrackOrderPage({ params }) {
         {/* Map */}
         {hasLocation && (
           <div className="bg-[#1a2830] rounded-2xl p-4 mb-8 border border-white/5 overflow-hidden">
-            <h2 className="font-black text-[#17d492] mb-3 text-sm uppercase tracking-widest">Delivery Location</h2>
+            <h2 className="font-black text-[#17d492] mb-3 text-sm uppercase tracking-widest">
+              Delivery Location
+            </h2>
             <div className="rounded-xl overflow-hidden" style={{ height: "280px" }}>
               <TrackingMap lat={order.deliveryLocation.lat} lng={order.deliveryLocation.lng} />
             </div>
@@ -161,12 +264,17 @@ export default function TrackOrderPage({ params }) {
         {/* Activity Log */}
         {order.trackingUpdates?.length > 0 && (
           <div className="bg-[#1a2830] rounded-2xl p-6 border border-white/5">
-            <h2 className="font-black text-[#17d492] mb-4 text-sm uppercase tracking-widest">Activity Log</h2>
+            <h2 className="font-black text-[#17d492] mb-4 text-sm uppercase tracking-widest">
+              Activity Log
+            </h2>
             <div className="space-y-3">
               {[...order.trackingUpdates].reverse().map((update, idx) => (
                 <div key={idx} className="flex gap-3 text-sm">
                   <span className="text-slate-600 text-xs mt-0.5 whitespace-nowrap font-bold">
-                    {new Date(update.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    {new Date(update.timestamp).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </span>
                   <span className="text-slate-300">{update.message}</span>
                 </div>
@@ -174,6 +282,7 @@ export default function TrackOrderPage({ params }) {
             </div>
           </div>
         )}
+
       </div>
     </div>
   );
