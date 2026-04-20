@@ -27,8 +27,7 @@ export default function TrackOrderPage({ params }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const intervalRef = useRef(null);
-  const autoConfirmRef = useRef(null);
-  const hasAutoConfirmed = useRef(false); // prevent firing twice
+  const hasAutoConfirmed = useRef(false);
 
   // ── Fetch order ───────────────────────────────────────────────
   const fetchOrder = async () => {
@@ -46,7 +45,7 @@ export default function TrackOrderPage({ params }) {
     }
   };
 
-  // ── Auto-confirm: runs only when status is "placed" ───────────
+  // ── Auto-confirm: instantly moves status from placed → confirmed ──
   const autoConfirm = async () => {
     try {
       await fetch(`/api/socket`, {
@@ -55,10 +54,10 @@ export default function TrackOrderPage({ params }) {
         body: JSON.stringify({
           orderId,
           status: "confirmed",
-          message: "Your order has been automatically confirmed.",
+          message: "Your order has been confirmed.",
         }),
       });
-      await fetchOrder(); // refresh UI immediately after
+      await fetchOrder();
     } catch (err) {
       console.error("Auto-confirm failed:", err);
     }
@@ -69,12 +68,10 @@ export default function TrackOrderPage({ params }) {
     const init = async () => {
       const data = await fetchOrder();
 
-      // Only auto-confirm if order is still in "placed" state
+      // Instantly confirm if order is still in "placed" state
       if (data?.status === "placed" && !hasAutoConfirmed.current) {
         hasAutoConfirmed.current = true;
-        autoConfirmRef.current = setTimeout(() => {
-          autoConfirm();
-        }, 10000); // 10 seconds after page load → auto confirm
+        autoConfirm(); // no delay — fires immediately
       }
     };
 
@@ -85,7 +82,6 @@ export default function TrackOrderPage({ params }) {
 
     return () => {
       clearInterval(intervalRef.current);
-      clearTimeout(autoConfirmRef.current);
     };
   }, [orderId]);
 
@@ -148,12 +144,6 @@ export default function TrackOrderPage({ params }) {
               <p className="text-sm text-white/40 mt-0.5">
                 {isCancelled ? "Please contact us on WhatsApp" : STATUS_STEPS[currentStep]?.desc}
               </p>
-              {/* Show auto-confirm notice when order is just placed */}
-              {order.status === "placed" && (
-                <p className="text-xs text-amber-400 mt-1.5 font-bold">
-                  ⏱ Auto-confirming your order in a few seconds...
-                </p>
-              )}
               {order.estimatedDelivery && !isCancelled && (
                 <p className="text-sm text-white/50 mt-0.5">
                   Est. delivery:{" "}
@@ -192,7 +182,7 @@ export default function TrackOrderPage({ params }) {
                   const done = idx <= currentStep;
                   const active = idx === currentStep;
                   const update = order.trackingUpdates?.find((u) => u.status === step.key);
-                  const isAdminStep = idx >= 2; // preparing, out_for_delivery, delivered = admin only
+                  const isAdminStep = idx >= 2;
 
                   return (
                     <div key={step.key} className="flex items-start gap-4 relative">
@@ -210,18 +200,7 @@ export default function TrackOrderPage({ params }) {
                           <p className={`font-black text-sm ${done ? "text-white" : "text-white/20"}`}>
                             {step.label}
                           </p>
-                          {/* Show "Auto" badge on first two steps */}
-                          {idx === 0 && (
-                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-[#17d492]/20 text-[#17d492]">
-                              AUTO
-                            </span>
-                          )}
-                          {idx === 1 && (
-                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-[#17d492]/20 text-[#17d492]">
-                              AUTO
-                            </span>
-                          )}
-                          {/* Show "Admin" badge on remaining steps */}
+                          {/* "BY ADMIN" badge only on future admin-controlled steps */}
                           {isAdminStep && !done && (
                             <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-white/5 text-white/20">
                               BY ADMIN
