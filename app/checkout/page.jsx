@@ -1,7 +1,7 @@
 "use client";
 
 import { useCart } from "../context/CartContext.js";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Script from "next/script";
 import {
   FaCheckCircle,
@@ -13,6 +13,8 @@ import {
   FaCalendarCheck,
   FaLock,
   FaMoneyBillWave,
+  FaUserCheck,
+  FaEdit,
 } from "react-icons/fa";
 import { MdPayment } from "react-icons/md";
 
@@ -24,16 +26,12 @@ const TIME_SLOTS = [
 ];
 
 const COD_PLATFORM_FEE = 5;
+const STORAGE_KEY = "kapilstore_checkout_details";
 
 export default function CheckoutPage() {
   const { cart, clearCart } = useCart();
 
-  const [form, setForm] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    address: "",
-  });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", address: "" });
   const [isJamiaStudent, setIsJamiaStudent] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -42,6 +40,32 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [codSuccess, setCodSuccess] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [savedDetails, setSavedDetails] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // ─── Load saved details on mount ───────────────────────────────
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setSavedDetails(parsed);
+        setForm(parsed.form || { name: "", phone: "", email: "", address: "" });
+        setIsJamiaStudent(parsed.isJamiaStudent ?? null);
+        setIsEditing(false);
+      } else {
+        setIsEditing(true);
+      }
+    } catch {
+      setIsEditing(true);
+    }
+  }, []);
+
+  const saveToLocal = (formData, jamia) => {
+    const payload = { form: formData, isJamiaStudent: jamia };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    setSavedDetails(payload);
+  };
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const deliveryCharge = Math.round(subtotal * 0.1);
@@ -57,8 +81,19 @@ export default function CheckoutPage() {
     return true;
   };
 
+  const handleSaveDetails = () => {
+    if (!form.name.trim() || !form.phone.trim() || !form.address.trim() || isJamiaStudent === null) {
+      alert("Please fill all required fields before saving");
+      return;
+    }
+    saveToLocal(form, isJamiaStudent);
+    setIsEditing(false);
+  };
+
+  // ─── COD Handler ───────────────────────────────────────────────
   const handleCODOrder = async () => {
     if (!validateForm()) return;
+    saveToLocal(form, isJamiaStudent);
     setLoading(true);
     try {
       const orderRes = await fetch("/api/order", {
@@ -81,7 +116,6 @@ export default function CheckoutPage() {
       setCodSuccess(true);
       setSuccess(true);
       clearCart();
-      setForm({ name: "", phone: "", email: "", address: "" });
     } catch (err) {
       console.error("COD Order error:", err);
       alert(err.message || "Something went wrong. Please try again.");
@@ -90,9 +124,11 @@ export default function CheckoutPage() {
     }
   };
 
+  // ─── Razorpay Handler ──────────────────────────────────────────
   const handlePayClick = async () => {
     if (!validateForm()) return;
     if (!razorpayLoaded) { alert("Payment gateway is still loading, please try again."); return; }
+    saveToLocal(form, isJamiaStudent);
     setLoading(true);
     try {
       const rzpRes = await fetch("/api/payment/create-order", {
@@ -143,7 +179,6 @@ export default function CheckoutPage() {
           setCodSuccess(false);
           setSuccess(true);
           clearCart();
-          setForm({ name: "", phone: "", email: "", address: "" });
           setLoading(false);
         },
         modal: { ondismiss: () => setLoading(false) },
@@ -162,6 +197,7 @@ export default function CheckoutPage() {
     }
   };
 
+  // ─── Success Screen ────────────────────────────────────────────
   if (success) {
     return (
       <div className="min-h-screen bg-[#22323c] text-[#f5f5f5] flex items-center justify-center px-4">
@@ -178,7 +214,7 @@ export default function CheckoutPage() {
           )}
           {codSuccess ? (
             <>
-              <p className="text-yellow-400 text-sm mb-2 font-semibold">Cash on Delivery — Pay when your order arrives.</p>
+              <p className="text-green-400 text-sm mb-2 font-semibold">Cash on Delivery — Pay when your order arrives.</p>
               <p className="text-white/50 text-sm mb-8">Keep ₹{grandTotal} ready. We'll contact you before delivery.</p>
             </>
           ) : (
@@ -212,60 +248,118 @@ export default function CheckoutPage() {
             {/* LEFT */}
             <div className="space-y-6">
 
-              {/* Delivery Details */}
+              {/* ─── Delivery Details ─── */}
               <div className="bg-[#1a2830] rounded-2xl p-6 border border-white/5">
-                <h2 className="text-lg font-black mb-4 text-[#17d492]">Delivery Details</h2>
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    placeholder="Full Name *"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 focus:outline-none focus:border-[#17d492] transition"
-                  />
-                  <input
-                    type="tel"
-                    placeholder="Phone Number *"
-                    value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 focus:outline-none focus:border-[#17d492] transition"
-                  />
-                  <input
-                    type="email"
-                    placeholder="Email (for order confirmation)"
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 focus:outline-none focus:border-[#17d492] transition"
-                  />
-
-                  {/* Jamia Student Toggle */}
-                  <div>
-                    <p className="mb-2 font-bold text-[#17d492] text-sm">Are you a Jamia student? *</p>
-                    <div className="flex gap-3">
-                      {[{ val: true, label: "Yes" }, { val: false, label: "No" }].map((opt) => (
-                        <label
-                          key={String(opt.val)}
-                          className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border cursor-pointer transition text-sm font-bold ${
-                            isJamiaStudent === opt.val
-                              ? "border-[#17d492] bg-[#17d492]/10 text-[#17d492]"
-                              : "border-white/10 text-slate-400 hover:border-white/30"
-                          }`}
-                        >
-                          <input type="radio" name="jamia" className="hidden" onChange={() => setIsJamiaStudent(opt.val)} />
-                          {opt.label}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <textarea
-                    rows={3}
-                    placeholder="Complete Address (Building / Area / Landmark) *"
-                    value={form.address}
-                    onChange={(e) => setForm({ ...form, address: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 focus:outline-none focus:border-[#17d492] transition"
-                  />
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-black text-[#17d492]">Delivery Details</h2>
+                  {savedDetails && !isEditing && (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="flex items-center gap-1.5 text-xs font-black text-slate-400 hover:text-[#17d492] transition px-3 py-1.5 rounded-lg border border-white/10 hover:border-[#17d492]/40"
+                    >
+                      <FaEdit size={11} /> Edit
+                    </button>
+                  )}
                 </div>
+
+                {/* ── Saved details card (read-only) ── */}
+                {savedDetails && !isEditing ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 mb-3">
+                      <FaUserCheck size={14} className="text-[#17d492]" />
+                      <span className="text-xs font-black text-[#17d492] uppercase tracking-wider">Saved Details</span>
+                    </div>
+                    <div className="bg-[#22323c] rounded-xl p-4 space-y-2.5 border border-[#17d492]/20">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-500">Name</span>
+                        <span className="text-white font-bold">{form.name}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-500">Phone</span>
+                        <span className="text-white font-bold">{form.phone}</span>
+                      </div>
+                      {form.email && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-500">Email</span>
+                          <span className="text-white font-bold truncate ml-4 text-right">{form.email}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-500 shrink-0">Jamia Student</span>
+                        <span className={`font-bold ${isJamiaStudent ? "text-[#17d492]" : "text-slate-300"}`}>
+                          {isJamiaStudent ? "Yes" : "No"}
+                        </span>
+                      </div>
+                      <div className="pt-1 border-t border-white/5">
+                        <span className="text-slate-500 text-xs block mb-1">Address</span>
+                        <span className="text-white text-sm">{form.address}</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-600 flex items-center gap-1.5">
+                      <FaLock size={9} /> Details saved on this device — tap Edit to change
+                    </p>
+                  </div>
+                ) : (
+                  /* ── Editable form ── */
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      placeholder="Full Name *"
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 focus:outline-none focus:border-[#17d492] transition"
+                    />
+                    <input
+                      type="tel"
+                      placeholder="Phone Number *"
+                      value={form.phone}
+                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 focus:outline-none focus:border-[#17d492] transition"
+                    />
+                    <input
+                      type="email"
+                      placeholder="Email (for order confirmation)"
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 focus:outline-none focus:border-[#17d492] transition"
+                    />
+
+                    <div>
+                      <p className="mb-2 font-bold text-[#17d492] text-sm">Are you a Jamia student? *</p>
+                      <div className="flex gap-3">
+                        {[{ val: true, label: "Yes" }, { val: false, label: "No" }].map((opt) => (
+                          <label
+                            key={String(opt.val)}
+                            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border cursor-pointer transition text-sm font-bold ${
+                              isJamiaStudent === opt.val
+                                ? "border-[#17d492] bg-[#17d492]/10 text-[#17d492]"
+                                : "border-white/10 text-slate-400 hover:border-white/30"
+                            }`}
+                          >
+                            <input type="radio" name="jamia" className="hidden" onChange={() => setIsJamiaStudent(opt.val)} />
+                            {opt.label}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <textarea
+                      rows={3}
+                      placeholder="Complete Address (Building / Area / Landmark) *"
+                      value={form.address}
+                      onChange={(e) => setForm({ ...form, address: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 focus:outline-none focus:border-[#17d492] transition"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={handleSaveDetails}
+                      className="w-full py-3 rounded-xl bg-[#17d492]/10 border border-[#17d492]/30 text-[#17d492] font-black text-sm hover:bg-[#17d492]/20 transition flex items-center justify-center gap-2"
+                    >
+                      <FaUserCheck size={13} /> Save Details
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* ─── Delivery Time Slot ─── */}
@@ -281,35 +375,27 @@ export default function CheckoutPage() {
                         type="button"
                         onClick={() => setSelectedSlot(slot.time)}
                         className={`flex items-center gap-3 px-4 py-3.5 rounded-xl border text-left transition-all ${
-                          isSelected
-                            ? "border-[#17d492] bg-[#17d492]/10"
-                            : "border-white/10 hover:border-white/25 hover:bg-white/3"
+                          isSelected ? "border-[#17d492] bg-[#17d492]/10" : "border-white/10 hover:border-white/25"
                         }`}
                       >
-                        <div
-                          className={`w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center transition ${
-                            isSelected ? "border-[#17d492]" : "border-slate-500"
-                          }`}
-                        >
+                        <div className={`w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center transition ${isSelected ? "border-[#17d492]" : "border-slate-500"}`}>
                           {isSelected && <div className="w-2 h-2 rounded-full bg-[#17d492]" />}
                         </div>
-                        <div>
-                          <p className={`text-sm font-bold transition ${isSelected ? "text-white" : "text-slate-300"}`}>
-                            {slot.label}
-                          </p>
-                        </div>
+                        <p className={`text-sm font-bold transition ${isSelected ? "text-white" : "text-slate-300"}`}>
+                          {slot.label}
+                        </p>
                       </button>
                     );
                   })}
                 </div>
                 {!selectedSlot && (
-                  <p className="mt-3 text-xs text-yellow-400/80 flex items-center gap-1.5">
+                  <p className="mt-3 text-xs text-[#17d492]/70 flex items-center gap-1.5">
                     <FaClock size={10} /> Please select a time slot to continue
                   </p>
                 )}
               </div>
 
-              {/* Delivery Info */}
+              {/* ─── Delivery Info ─── */}
               <div className="bg-[#1a2830] rounded-2xl p-6 border border-[#17d492]/20">
                 <h2 className="text-lg font-black mb-4 text-[#17d492]">Important Delivery Information</h2>
                 <ul className="space-y-3">
@@ -328,7 +414,7 @@ export default function CheckoutPage() {
                 </ul>
               </div>
 
-              {/* Payment Method */}
+              {/* ─── Payment Method ─── */}
               <div className="bg-[#1a2830] rounded-2xl p-6 border border-white/5">
                 <h2 className="text-lg font-black mb-4 text-[#17d492]">Payment Method</h2>
                 <div className="space-y-3">
@@ -345,15 +431,15 @@ export default function CheckoutPage() {
                     </div>
                     <FaMoneyBillWave size={20} className={`shrink-0 mt-0.5 transition ${paymentMethod === "cod" ? "text-[#17d492]" : "text-slate-500"}`} />
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <p className={`font-bold text-sm transition ${paymentMethod === "cod" ? "text-white" : "text-slate-400"}`}>
                           Cash on Delivery
                         </p>
-                        <span className="text-[10px] font-black px-2 py-0.5 rounded-lg bg-yellow-500/15 text-yellow-400 border border-yellow-500/20">
-                          +₹5 fee
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-lg bg-[#17d492]/15 text-[#17d492] border border-[#17d492]/25">
+                          +₹5 platform fee
                         </span>
                       </div>
-                      <p className="text-xs text-slate-400 mt-0.5">Pay in cash when your order arrives. ₹5 platform fee applies.</p>
+                      <p className="text-xs text-slate-400 mt-0.5">Pay in cash when your order arrives.</p>
                     </div>
                     {paymentMethod === "cod" && (
                       <span className="text-[10px] font-black px-2 py-1 rounded-lg bg-[#17d492]/20 text-[#17d492] shrink-0">SELECTED</span>
@@ -372,9 +458,9 @@ export default function CheckoutPage() {
                     </div>
                     <MdPayment size={20} className={`shrink-0 mt-0.5 transition ${paymentMethod === "razorpay" ? "text-[#17d492]" : "text-slate-500"}`} />
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <p className={`font-bold text-sm transition ${paymentMethod === "razorpay" ? "text-white" : "text-slate-400"}`}>
-                          Pay Online — UPI / Cards / Net Banking / Wallets
+                          Pay Online — UPI / Cards / Net Banking
                         </p>
                         <span className="text-[10px] font-black px-2 py-0.5 rounded-lg bg-[#17d492]/15 text-[#17d492] border border-[#17d492]/20">
                           No extra fee
@@ -389,9 +475,9 @@ export default function CheckoutPage() {
                 </div>
 
                 {paymentMethod === "cod" && (
-                  <div className="mt-3 flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded-xl px-4 py-3">
-                    <FaMoneyBillWave size={13} className="text-yellow-400 shrink-0" />
-                    <p className="text-xs text-yellow-300">
+                  <div className="mt-3 flex items-center gap-2 bg-[#17d492]/8 border border-[#17d492]/20 rounded-xl px-4 py-3">
+                    <FaMoneyBillWave size={13} className="text-[#17d492] shrink-0" />
+                    <p className="text-xs text-[#17d492]/90">
                       Keep <span className="font-black">exact change of ₹{grandTotal}</span> ready (includes ₹5 platform fee). Delivery agent may not carry change.
                     </p>
                   </div>
@@ -432,34 +518,30 @@ export default function CheckoutPage() {
                   <span>₹{deliveryCharge}</span>
                 </div>
                 {paymentMethod === "cod" && (
-                  <div className="flex justify-between text-yellow-400">
-                    <span className="flex items-center gap-1">
+                  <div className="flex justify-between text-[#17d492]">
+                    <span className="flex items-center gap-1.5">
                       Platform Fee
-                      <span className="text-[10px] bg-yellow-500/15 border border-yellow-500/20 px-1.5 py-0.5 rounded font-black">COD</span>
+                      <span className="text-[10px] bg-[#17d492]/15 border border-[#17d492]/20 px-1.5 py-0.5 rounded font-black">COD</span>
                     </span>
                     <span>₹{COD_PLATFORM_FEE}</span>
                   </div>
                 )}
-
-                {/* Selected slot preview */}
                 {selectedSlot && (
                   <div className="flex justify-between text-[#17d492] text-xs pt-1">
                     <span className="flex items-center gap-1"><FaClock size={10} /> Delivery slot</span>
                     <span className="font-bold">{TIME_SLOTS.find(s => s.time === selectedSlot)?.label}</span>
                   </div>
                 )}
-
                 <div className="flex justify-between font-black text-lg pt-2 border-t border-white/10">
                   <span>Total</span>
                   <span className="text-[#17d492]">₹{grandTotal}</span>
                 </div>
               </div>
 
-              {/* Slot reminder if not selected */}
               {!selectedSlot ? (
-                <div className="mt-4 flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded-xl px-4 py-3">
-                  <FaClock size={13} className="text-yellow-400 shrink-0" />
-                  <p className="text-xs text-yellow-300 font-semibold">Select a delivery time slot to place your order</p>
+                <div className="mt-4 flex items-center gap-2 bg-[#17d492]/8 border border-[#17d492]/20 rounded-xl px-4 py-3">
+                  <FaClock size={13} className="text-[#17d492] shrink-0" />
+                  <p className="text-xs text-[#17d492]/80 font-semibold">Select a delivery time slot to place your order</p>
                 </div>
               ) : (
                 <div className="mt-4 flex items-center gap-2 bg-[#17d492]/5 border border-[#17d492]/15 rounded-xl px-4 py-3">
