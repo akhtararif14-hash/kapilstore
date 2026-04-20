@@ -12,10 +12,14 @@ export async function POST(req) {
       cart,
       total,
       deliveryCharge,
+      platformFee,
+      deliverySlot,
       paymentMethod,
       paymentStatus,
       userId,
       razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature,
       utrNumber,
     } = body;
 
@@ -23,7 +27,7 @@ export async function POST(req) {
     if (!customer?.name || !customer?.phone || !customer?.address) {
       return Response.json(
         { message: "Missing required customer fields" },
-        { status: 400 },
+        { status: 400 }
       );
     }
     if (!cart || cart.length === 0) {
@@ -33,6 +37,13 @@ export async function POST(req) {
       return Response.json({ message: "Invalid order total" }, { status: 400 });
     }
 
+    // ── Generate orderId and orderCategory ───────────────────────
+    const orderId =
+      "ORD-" +
+      Date.now() +
+      "-" +
+      Math.random().toString(36).substring(2, 7).toUpperCase();
+    const orderCategory = cart[0]?.category || "stationery";
 
     // ── Save order ───────────────────────────────────────────────
     const order = new Order({
@@ -44,7 +55,7 @@ export async function POST(req) {
         email: customer.email || "",
         address: customer.address,
         isJamiaStudent: customer.isJamiaStudent ?? false,
-        timeSlot: customer.timeSlot || "",
+        timeSlot: deliverySlot || customer.timeSlot || "",
       },
       items: cart.map((item) => ({
         title: item.title,
@@ -56,10 +67,13 @@ export async function POST(req) {
       category: orderCategory,
       totalAmount: total,
       deliveryCharge: deliveryCharge ?? 0,
+      platformFee: platformFee ?? 0,
       paymentMethod: paymentMethod || "razorpay",
       paymentStatus: paymentStatus || "pending_verification",
       utrNumber: utrNumber || null,
       razorpayOrderId: razorpayOrderId || null,
+      razorpayPaymentId: razorpayPaymentId || null,
+      razorpaySignature: razorpaySignature || null,
       trackingUpdates: [
         {
           status: "placed",
@@ -94,25 +108,40 @@ export async function POST(req) {
 
     return Response.json(
       { message: "Order placed successfully", orderId },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("Order API error:", error);
     return Response.json(
       { message: error.message || "Internal Server Error" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
 
 // ── Telegram Notification ─────────────────────────────────────────
-async function sendTelegramNotification({ orderId, customer, total, paymentMethod, cart, deliveryCharge }) {
+async function sendTelegramNotification({
+  orderId,
+  customer,
+  total,
+  paymentMethod,
+  cart,
+  deliveryCharge,
+}) {
   if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_CHAT_ID) return;
 
   const isCOD = paymentMethod === "cod";
 
   const itemsList = cart
-    .map((item) => "  • " + item.title + " x" + item.quantity + " = ₹" + item.price * item.quantity)
+    .map(
+      (item) =>
+        "  • " +
+        item.title +
+        " x" +
+        item.quantity +
+        " = ₹" +
+        item.price * item.quantity
+    )
     .join("\n");
 
   const message = [
@@ -134,11 +163,15 @@ async function sendTelegramNotification({ orderId, customer, total, paymentMetho
     "🚚 Delivery: ₹" + deliveryCharge,
     "💰 *Total: ₹" + total + "*",
     "",
-    isCOD ? "⚠️ Collect ₹" + total + " cash at delivery" : "✅ Payment received",
+    isCOD
+      ? "⚠️ Collect ₹" + total + " cash at delivery"
+      : "✅ Payment received",
   ].join("\n");
 
   await fetch(
-    "https://api.telegram.org/bot" + process.env.TELEGRAM_BOT_TOKEN + "/sendMessage",
+    "https://api.telegram.org/bot" +
+      process.env.TELEGRAM_BOT_TOKEN +
+      "/sendMessage",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -171,7 +204,6 @@ async function sendEmails({
 
   const isCOD = paymentMethod === "cod";
 
-  // Plain-text items list
   const itemsList = cart
     .map(
       (item) =>
@@ -179,7 +211,7 @@ async function sendEmails({
         " (Qty: " +
         item.quantity +
         ") - Rs." +
-        item.price * item.quantity,
+        item.price * item.quantity
     )
     .join("\n");
 
@@ -187,8 +219,7 @@ async function sendEmails({
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
     to: process.env.EMAIL_USER,
-    subject:
-      (isCOD ? "💵 New COD Order: " : "✅ New Online Order: ") + orderId,
+    subject: (isCOD ? "💵 New COD Order: " : "✅ New Online Order: ") + orderId,
     text: [
       isCOD
         ? "⚠️  CASH ON DELIVERY ORDER — Collect Rs." + total + " at delivery"
@@ -217,8 +248,8 @@ async function sendEmails({
   if (!customer.email) return;
 
   const itemRows = cart
-    .map(function (item) {
-      return (
+    .map(
+      (item) =>
         "<tr>" +
         '<td style="padding:8px 0;border-bottom:1px solid #ffffff15;font-size:14px;color:#f5f5f5cc;">' +
         item.title +
@@ -230,8 +261,7 @@ async function sendEmails({
         item.price * item.quantity +
         "</td>" +
         "</tr>"
-      );
-    })
+    )
     .join("");
 
   const deliveryCell =
@@ -239,7 +269,6 @@ async function sendEmails({
       ? '<span style="color:#17d492;font-weight:bold;">FREE</span>'
       : "Rs." + deliveryCharge;
 
-  // COD or Online payment banner
   const paymentBanner = isCOD
     ? '<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin:0 0 20px;">' +
       '<p style="margin:0;font-size:14px;color:#92400e;font-weight:700;">💵 Cash on Delivery</p>' +
