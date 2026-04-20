@@ -15,23 +15,102 @@ import {
   FaMoneyBillWave,
   FaUserCheck,
   FaEdit,
+  FaGift,
+  FaTruck,
+  FaHome,
 } from "react-icons/fa";
 import { MdPayment } from "react-icons/md";
 
-const TIME_SLOTS = [
-  { id: "slot1", label: "8:50 AM – 9:20 AM", time: "08:50-09:20" },
-  { id: "slot2", label: "1:00 PM – 1:30 PM", time: "13:00-13:30" },
-  { id: "slot3", label: "4:30 PM – 5:30 PM", time: "16:30-17:30" },
-  { id: "slot4", label: "8:30 PM – 9:30 PM", time: "20:30-21:30" },
+const ALL_TIME_SLOTS = [
+  { id: "slot1", label: "8:50 AM – 9:20 AM", time: "08:50-09:20", jamiaOnly: true },
+  { id: "slot2", label: "1:00 PM – 1:30 PM",  time: "13:00-13:30", jamiaOnly: true },
+  { id: "slot3", label: "4:30 PM – 5:30 PM",  time: "16:30-17:30", jamiaOnly: true },
+  { id: "slot4", label: "8:30 PM – 9:30 PM",  time: "20:30-21:30", jamiaOnly: false },
 ];
 
 const COD_PLATFORM_FEE = 5;
 const STORAGE_KEY = "kapilstore_checkout_details";
 
+// ── Delivery info bullets by student type ──────────────────────
+const JAMIA_DELIVERY_INFO = [
+  {
+    icon: FaGift,
+    text: <>
+      <span className="text-white font-semibold">Free delivery</span> for all Jamia Millia Islamia students — no delivery charges applied.
+    </>,
+  },
+  {
+    icon: FaMapMarkerAlt,
+    text: <>
+      Please mention your <span className="text-white font-semibold">exact gate number</span> for smooth and quick delivery.
+      Supported gates: <span className="text-white font-semibold">Gate 1, Gate 7, Gate 8</span> and other campus entry points.
+    </>,
+  },
+  {
+    icon: FaHome,
+    text: <>
+      For hostel residents, mention your <span className="text-white font-semibold">hostel name clearly</span> in the address.
+      Common hostels: <span className="text-white font-semibold">J&K Hostel, BHM Hostel, Boys Hostel</span> and other on-campus accommodations.
+    </>,
+  },
+  {
+    icon: FaCalendarCheck,
+    text: <>
+      Deliveries are available <span className="text-white font-semibold">every day</span> across four convenient time slots — choose the one that fits your schedule.
+    </>,
+  },
+  {
+    icon: FaWhatsapp,
+    text: <>
+      For urgent or custom orders, reach us directly on WhatsApp:{" "}
+      <a href="https://wa.me/917982670413" target="_blank" rel="noopener noreferrer" className="text-[#17d492] font-black hover:underline">
+        +91 7982670413
+      </a>
+    </>,
+  },
+];
+
+const NON_JAMIA_DELIVERY_INFO = [
+  {
+    icon: FaTruck,
+    text: <>
+      A <span className="text-white font-semibold">10% delivery charge</span> is applied on your order subtotal to cover delivery costs to your location.
+    </>,
+  },
+  {
+    icon: FaMapMarkerAlt,
+    text: <>
+      Please provide your <span className="text-white font-semibold">complete address</span> including house number, apartment/flat number, floor, and any nearby landmark for accurate delivery.
+    </>,
+  },
+  {
+    icon: FaCalendarCheck,
+    text: <>
+      Delivery is available in the <span className="text-white font-semibold">8:30 PM – 9:30 PM</span> time slot. Please ensure someone is available to receive the order.
+    </>,
+  },
+  {
+    icon: FaPhoneAlt,
+    text: <>
+      You will receive a <span className="text-white font-semibold">confirmation notification</span> before your order is dispatched for delivery.
+    </>,
+  },
+  {
+    icon: FaWhatsapp,
+    text: <>
+      For urgent orders or delivery queries, contact us on WhatsApp:{" "}
+      <a href="https://wa.me/917982670413" target="_blank" rel="noopener noreferrer" className="text-[#17d492] font-black hover:underline">
+        +91 7982670413
+      </a>
+    </>,
+  },
+];
+
 export default function CheckoutPage() {
   const { cart, clearCart } = useCart();
 
   const [form, setForm] = useState({ name: "", phone: "", email: "", address: "" });
+  const [phoneError, setPhoneError] = useState("");
   const [isJamiaStudent, setIsJamiaStudent] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -43,7 +122,24 @@ export default function CheckoutPage() {
   const [savedDetails, setSavedDetails] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  // ─── Load saved details on mount ───────────────────────────────
+  // Available slots depend on student type
+  const availableSlots = isJamiaStudent === false
+    ? ALL_TIME_SLOTS.filter(s => !s.jamiaOnly)
+    : ALL_TIME_SLOTS;
+
+  // If non-Jamia selected, reset slot if it's a Jamia-only one
+  useEffect(() => {
+    if (isJamiaStudent === false && selectedSlot) {
+      const slot = ALL_TIME_SLOTS.find(s => s.time === selectedSlot);
+      if (slot?.jamiaOnly) setSelectedSlot(null);
+    }
+    // Auto-select only slot for non-Jamia
+    if (isJamiaStudent === false) {
+      setSelectedSlot("20:30-21:30");
+    }
+  }, [isJamiaStudent]);
+
+  // Load saved details on mount
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -67,14 +163,27 @@ export default function CheckoutPage() {
     setSavedDetails(payload);
   };
 
+  // Phone validation
+  const handlePhoneChange = (val) => {
+    const digits = val.replace(/\D/g, "");
+    setForm({ ...form, phone: digits });
+    if (digits.length > 0 && digits.length !== 10) {
+      setPhoneError("Phone number must be exactly 10 digits");
+    } else {
+      setPhoneError("");
+    }
+  };
+
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const deliveryCharge = Math.round(subtotal * 0.1);
+  // Jamia students get free delivery
+  const deliveryCharge = isJamiaStudent === true ? 0 : Math.round(subtotal * 0.1);
   const platformFee = paymentMethod === "cod" ? COD_PLATFORM_FEE : 0;
   const grandTotal = subtotal + deliveryCharge + platformFee;
 
   const validateForm = () => {
     if (!form.name.trim()) { alert("Please enter your full name"); return false; }
     if (!form.phone.trim()) { alert("Please enter your phone number"); return false; }
+    if (form.phone.replace(/\D/g, "").length !== 10) { alert("Please enter a valid 10-digit phone number"); return false; }
     if (!form.address.trim()) { alert("Please enter your delivery address"); return false; }
     if (isJamiaStudent === null) { alert("Please select whether you are a Jamia student"); return false; }
     if (!selectedSlot) { alert("Please select a delivery time slot"); return false; }
@@ -84,6 +193,10 @@ export default function CheckoutPage() {
   const handleSaveDetails = () => {
     if (!form.name.trim() || !form.phone.trim() || !form.address.trim() || isJamiaStudent === null) {
       alert("Please fill all required fields before saving");
+      return;
+    }
+    if (form.phone.replace(/\D/g, "").length !== 10) {
+      alert("Please enter a valid 10-digit phone number");
       return;
     }
     saveToLocal(form, isJamiaStudent);
@@ -209,7 +322,7 @@ export default function CheckoutPage() {
           </p>
           {selectedSlot && (
             <p className="text-[#17d492] text-sm mb-2 font-semibold flex items-center justify-center gap-1">
-              <FaClock size={12} /> Delivery slot: {TIME_SLOTS.find(s => s.time === selectedSlot)?.label}
+              <FaClock size={12} /> Delivery slot: {ALL_TIME_SLOTS.find(s => s.time === selectedSlot)?.label}
             </p>
           )}
           {codSuccess ? (
@@ -235,6 +348,12 @@ export default function CheckoutPage() {
       </div>
     );
   }
+
+  const deliveryInfo = isJamiaStudent === true
+    ? JAMIA_DELIVERY_INFO
+    : isJamiaStudent === false
+    ? NON_JAMIA_DELIVERY_INFO
+    : null;
 
   return (
     <>
@@ -262,7 +381,7 @@ export default function CheckoutPage() {
                   )}
                 </div>
 
-                {/* ── Saved details card (read-only) ── */}
+                {/* Saved details card */}
                 {savedDetails && !isEditing ? (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 mb-3">
@@ -300,7 +419,7 @@ export default function CheckoutPage() {
                     </p>
                   </div>
                 ) : (
-                  /* ── Editable form ── */
+                  /* Editable form */
                   <div className="space-y-3">
                     <input
                       type="text"
@@ -309,13 +428,37 @@ export default function CheckoutPage() {
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 focus:outline-none focus:border-[#17d492] transition"
                     />
-                    <input
-                      type="tel"
-                      placeholder="Phone Number *"
-                      value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 focus:outline-none focus:border-[#17d492] transition"
-                    />
+
+                    {/* Phone with validation */}
+                    <div>
+                      <div className={`flex items-center bg-[#22323c] border rounded-xl px-4 py-3 gap-2 transition ${
+                        phoneError ? "border-red-500/60" : form.phone.length === 10 ? "border-[#17d492]/60" : "border-white/10 focus-within:border-[#17d492]"
+                      }`}>
+                        <span className="text-slate-500 text-sm shrink-0">+91</span>
+                        <div className="w-px h-4 bg-white/10 shrink-0" />
+                        <input
+                          type="tel"
+                          placeholder="10-digit phone number *"
+                          value={form.phone}
+                          onChange={(e) => handlePhoneChange(e.target.value)}
+                          maxLength={10}
+                          className="flex-1 bg-transparent focus:outline-none text-white placeholder-slate-500 text-sm"
+                        />
+                        {form.phone.length === 10 && !phoneError && (
+                          <FaCheckCircle size={13} className="text-[#17d492] shrink-0" />
+                        )}
+                      </div>
+                      {phoneError && (
+                        <p className="text-red-400 text-xs mt-1.5 flex items-center gap-1">
+                          <span className="w-1 h-1 rounded-full bg-red-400 shrink-0" />
+                          {phoneError}
+                        </p>
+                      )}
+                      {form.phone.length > 0 && form.phone.length < 10 && !phoneError && (
+                        <p className="text-slate-500 text-xs mt-1.5">{10 - form.phone.length} more digit{10 - form.phone.length !== 1 ? "s" : ""} required</p>
+                      )}
+                    </div>
+
                     <input
                       type="email"
                       placeholder="Email (for order confirmation)"
@@ -324,10 +467,11 @@ export default function CheckoutPage() {
                       className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 focus:outline-none focus:border-[#17d492] transition"
                     />
 
+                    {/* Jamia Student Toggle */}
                     <div>
                       <p className="mb-2 font-bold text-[#17d492] text-sm">Are you a Jamia student? *</p>
                       <div className="flex gap-3">
-                        {[{ val: true, label: "Yes" }, { val: false, label: "No" }].map((opt) => (
+                        {[{ val: true, label: "Yes — Jamia Student" }, { val: false, label: "No — Outside Jamia" }].map((opt) => (
                           <label
                             key={String(opt.val)}
                             className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border cursor-pointer transition text-sm font-bold ${
@@ -345,7 +489,13 @@ export default function CheckoutPage() {
 
                     <textarea
                       rows={3}
-                      placeholder="Complete Address (Building / Area / Landmark) *"
+                      placeholder={
+                        isJamiaStudent === true
+                          ? "Hostel name / Gate number / Room number *"
+                          : isJamiaStudent === false
+                          ? "House no. / Apartment / Floor / Landmark *"
+                          : "Complete Address *"
+                      }
                       value={form.address}
                       onChange={(e) => setForm({ ...form, address: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 focus:outline-none focus:border-[#17d492] transition"
@@ -365,9 +515,13 @@ export default function CheckoutPage() {
               {/* ─── Delivery Time Slot ─── */}
               <div className="bg-[#1a2830] rounded-2xl p-6 border border-white/5">
                 <h2 className="text-lg font-black mb-1 text-[#17d492]">Delivery Time Slot</h2>
-                <p className="text-xs text-slate-500 mb-4">Select when you'd like your order delivered *</p>
+                <p className="text-xs text-slate-500 mb-4">
+                  {isJamiaStudent === false
+                    ? "Outside Jamia deliveries are available in the evening slot only."
+                    : "Select your preferred delivery window *"}
+                </p>
                 <div className="grid grid-cols-2 gap-3">
-                  {TIME_SLOTS.map((slot) => {
+                  {availableSlots.map((slot) => {
                     const isSelected = selectedSlot === slot.time;
                     return (
                       <button
@@ -388,31 +542,49 @@ export default function CheckoutPage() {
                     );
                   })}
                 </div>
-                {!selectedSlot && (
+
+                {isJamiaStudent === null && (
+                  <p className="mt-3 text-xs text-slate-500 flex items-center gap-1.5">
+                    <FaClock size={10} /> Select your student status above to see available time slots
+                  </p>
+                )}
+                {isJamiaStudent !== null && !selectedSlot && (
                   <p className="mt-3 text-xs text-[#17d492]/70 flex items-center gap-1.5">
                     <FaClock size={10} /> Please select a time slot to continue
                   </p>
                 )}
               </div>
 
-              {/* ─── Delivery Info ─── */}
-              <div className="bg-[#1a2830] rounded-2xl p-6 border border-[#17d492]/20">
-                <h2 className="text-lg font-black mb-4 text-[#17d492]">Important Delivery Information</h2>
-                <ul className="space-y-3">
-                  {[
-                    { icon: FaCalendarCheck, text: <> Delivery available everyday — <span className="text-white font-semibold">8:00 AM to 12:00 AM</span></> },
-                    { icon: FaBolt, text: <> Delivered within <span className="text-white font-semibold">your selected time slot</span></> },
-                    { icon: FaPhoneAlt, text: <> You'll receive a <span className="text-white font-semibold">confirmation mail</span> before delivery</> },
-                    { icon: FaMapMarkerAlt, text: <> Mention your <span className="text-white font-semibold">exact location</span> in the address</> },
-                    { icon: FaWhatsapp, text: <> For urgent orders, WhatsApp: <a href="https://wa.me/917982670413" target="_blank" rel="noopener noreferrer" className="text-[#17d492] font-black hover:underline">7982670413</a></> },
-                  ].map(({ icon: Icon, text }, i) => (
-                    <li key={i} className="flex items-start gap-3 text-sm text-white/70">
-                      <Icon className="text-[#17d492] mt-0.5 shrink-0" size={15} />
-                      <span>{text}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {/* ─── Delivery Info (dynamic) ─── */}
+              {deliveryInfo ? (
+                <div className="bg-[#1a2830] rounded-2xl p-6 border border-[#17d492]/20">
+                  <div className="flex items-center gap-2 mb-4">
+                    <h2 className="text-lg font-black text-[#17d492]">Delivery Information</h2>
+                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg border ${
+                      isJamiaStudent
+                        ? "bg-[#17d492]/15 text-[#17d492] border-[#17d492]/25"
+                        : "bg-slate-500/15 text-slate-400 border-slate-500/25"
+                    }`}>
+                      {isJamiaStudent ? "Jamia Campus" : "Outside Jamia"}
+                    </span>
+                  </div>
+                  <ul className="space-y-3.5">
+                    {deliveryInfo.map(({ icon: Icon, text }, i) => (
+                      <li key={i} className="flex items-start gap-3 text-sm text-white/70">
+                        <Icon className="text-[#17d492] mt-0.5 shrink-0" size={15} />
+                        <span>{text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <div className="bg-[#1a2830] rounded-2xl p-6 border border-white/5">
+                  <h2 className="text-lg font-black text-[#17d492] mb-2">Delivery Information</h2>
+                  <p className="text-sm text-slate-500">
+                    Please select your student status above to see personalised delivery instructions.
+                  </p>
+                </div>
+              )}
 
               {/* ─── Payment Method ─── */}
               <div className="bg-[#1a2830] rounded-2xl p-6 border border-white/5">
@@ -482,7 +654,6 @@ export default function CheckoutPage() {
                     </p>
                   </div>
                 )}
-
                 {paymentMethod === "razorpay" && (
                   <p className="mt-3 flex items-center gap-2 text-xs text-slate-500">
                     <FaLock size={10} /> 256-bit SSL secured payment powered by Razorpay
@@ -514,8 +685,16 @@ export default function CheckoutPage() {
                   <span>₹{subtotal}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Delivery <span className="text-xs text-slate-600">(10%)</span></span>
-                  <span>₹{deliveryCharge}</span>
+                  <span className="text-slate-400 flex items-center gap-1.5">
+                    Delivery
+                    {isJamiaStudent === true && (
+                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-[#17d492]/15 text-[#17d492] border border-[#17d492]/20">FREE</span>
+                    )}
+                    {isJamiaStudent === false && <span className="text-xs text-slate-600">(10%)</span>}
+                  </span>
+                  <span className={isJamiaStudent === true ? "text-[#17d492] font-black" : ""}>
+                    {isJamiaStudent === true ? "₹0" : `₹${deliveryCharge}`}
+                  </span>
                 </div>
                 {paymentMethod === "cod" && (
                   <div className="flex justify-between text-[#17d492]">
@@ -529,7 +708,7 @@ export default function CheckoutPage() {
                 {selectedSlot && (
                   <div className="flex justify-between text-[#17d492] text-xs pt-1">
                     <span className="flex items-center gap-1"><FaClock size={10} /> Delivery slot</span>
-                    <span className="font-bold">{TIME_SLOTS.find(s => s.time === selectedSlot)?.label}</span>
+                    <span className="font-bold">{ALL_TIME_SLOTS.find(s => s.time === selectedSlot)?.label}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-black text-lg pt-2 border-t border-white/10">
@@ -547,7 +726,7 @@ export default function CheckoutPage() {
                 <div className="mt-4 flex items-center gap-2 bg-[#17d492]/5 border border-[#17d492]/15 rounded-xl px-4 py-3">
                   <FaClock size={13} className="text-[#17d492] shrink-0" />
                   <p className="text-xs text-slate-400">
-                    Delivering at <span className="text-white font-bold">{TIME_SLOTS.find(s => s.time === selectedSlot)?.label}</span>
+                    Delivering at <span className="text-white font-bold">{ALL_TIME_SLOTS.find(s => s.time === selectedSlot)?.label}</span>
                   </p>
                 </div>
               )}
