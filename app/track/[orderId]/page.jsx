@@ -70,9 +70,9 @@ export default function TrackOrderPage({ params }) {
 
       // Instantly confirm if order is still in "placed" state
       if (data?.status === "placed" && !hasAutoConfirmed.current) {
-        hasAutoConfirmed.current = true;
-        autoConfirm(); // no delay — fires immediately
-      }
+  hasAutoConfirmed.current = true;
+  setTimeout(() => autoConfirm(), 2000);
+}
     };
 
     init();
