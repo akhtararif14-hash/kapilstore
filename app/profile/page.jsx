@@ -19,30 +19,17 @@ const STATUS_LABELS = {
 export default function ProfilePage() {
   const { data: session, status } = useSession();
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [profile, setProfile] = useState({ phone: "", address: "", isJamiaStudent: false });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   const fetchOrders = async () => {
+    setLoading(true);
     try {
       const res = await fetch("/api/user/orders");
-      
-      if (res.status === 401) {
-        console.error("Not authorized - session may not be passing");
-        setOrders([]);
-        return;
-      }
-      
-      if (!res.ok) {
-        console.error("Failed to fetch orders:", res.status);
-        setOrders([]);
-        return;
-      }
-
       const data = await res.json();
-      console.log("Orders response:", data); // ← check this in console
       setOrders(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("fetchOrders error:", err);
@@ -51,6 +38,18 @@ export default function ProfilePage() {
       setLoading(false);
     }
   };
+
+  // ✅ THIS WAS MISSING — calls fetchOrders when session is ready
+  useEffect(() => {
+    if (status === "authenticated" && session) {
+      setProfile({
+        phone: session.user.phone || "",
+        address: session.user.address || "",
+        isJamiaStudent: session.user.isJamiaStudent || false,
+      });
+      fetchOrders();
+    }
+  }, [status]);
 
   const saveProfile = async () => {
     setSaving(true);
@@ -102,8 +101,8 @@ export default function ProfilePage() {
       <div className="max-w-3xl mx-auto">
 
         {saved && (
-          <div className="mb-6 bg-[#17d492]/10 border border-[#17d492]/30 text-[#17d492] rounded-xl px-4 py-3 font-bold text-sm animate-slide-in">
-             Profile updated successfully!
+          <div className="mb-6 bg-[#17d492]/10 border border-[#17d492]/30 text-[#17d492] rounded-xl px-4 py-3 font-bold text-sm">
+            ✅ Profile updated successfully!
           </div>
         )}
 
@@ -159,18 +158,6 @@ export default function ProfilePage() {
         {/* Orders */}
         <div>
           <h2 className="text-xl font-black mb-6 text-[#17d492]">My Orders</h2>
-
-          {/* TEMP TEST BUTTON - remove after debugging */}
-<button
-  onClick={async () => {
-    const res = await fetch("/api/user/orders");
-    const data = await res.json();
-    alert(JSON.stringify(data));
-  }}
-  className="mb-4 px-4 py-2 bg-red-500 text-white rounded-xl font-bold"
->
-  TEST FETCH ORDERS
-</button>
 
           {loading && (
             <div className="flex justify-center py-12">
@@ -230,4 +217,4 @@ export default function ProfilePage() {
       </div>
     </div>
   );
-};
+}

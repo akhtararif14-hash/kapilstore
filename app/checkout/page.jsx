@@ -178,6 +178,10 @@ export default function CheckoutPage() {
   const [savedDetails, setSavedDetails] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
+  useEffect(() => {
+  window.scrollTo(0, 0);
+}, []);
+
   const availableSlots =
     isJamiaStudent === false
       ? ALL_TIME_SLOTS.filter((s) => !s.jamiaOnly)
