@@ -201,6 +201,13 @@ export default function CheckoutPage() {
     });
   }, []);
 
+  // ── Scroll to top when order is placed successfully ──
+  useEffect(() => {
+    if (success) {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
+  }, [success]);
+
   useEffect(() => {
     if (isJamiaStudent === false && selectedSlot) {
       const slot = ALL_TIME_SLOTS.find((s) => s.time === selectedSlot);
@@ -370,10 +377,11 @@ export default function CheckoutPage() {
     }
   };
 
+  // ── Success Screen ──
   if (success) {
     return (
-      <div className="min-h-screen bg-[#22323c] text-[#f5f5f5] flex items-center justify-center px-4">
-        <div className="text-center max-w-sm">
+      <div className="min-h-screen bg-[#22323c] text-[#f5f5f5] flex items-start justify-center px-4 pt-28">
+        <div className="text-center max-w-sm w-full">
           <FaCheckCircle size={64} className="text-[#17d492] mx-auto mb-4" />
           <h2 className="text-2xl font-black text-[#17d492] mb-2">Order Placed!</h2>
           {placedOrderId && (
