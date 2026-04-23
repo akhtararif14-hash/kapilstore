@@ -140,14 +140,33 @@ export default function StationeryClient() {
     </div>
   );
 }
-
 function StationeryCard({ product }) {
-  const price = Number(product.price || 0);
-  const actualPrice = Number(product.actualPrice || 0);
+  const hasVariants = Array.isArray(product.variants) && product.variants.length > 0;
+
+  const [selectedVariant, setSelectedVariant] = useState(hasVariants ? 0 : null);
+
+  const price = hasVariants
+    ? Number(product.variants[selectedVariant]?.price || 0)
+    : Number(product.price || 0);
+
+  const actualPrice = hasVariants
+    ? Number(product.variants[selectedVariant]?.mrp || 0)
+    : Number(product.actualPrice || 0);
+
   const hasDiscount = actualPrice > price;
   const discountPct = hasDiscount ? Math.round(((actualPrice - price) / actualPrice) * 100) : 0;
   const images = Array.isArray(product.images) && product.images.length > 0 ? product.images : ["/placeholder.png"];
   const [imgIdx, setImgIdx] = useState(0);
+
+  // Pass selected variant info to cart
+  const cartProduct = hasVariants
+    ? {
+        ...product,
+        price,
+        actualPrice,
+        title: `${product.title} – ${product.variants[selectedVariant]?.label}`,
+      }
+    : product;
 
   return (
     <div className="bg-[#1a2830] border border-white/5 rounded-2xl overflow-hidden hover:border-blue-400/30 transition-all group">
@@ -180,12 +199,39 @@ function StationeryCard({ product }) {
       <div className="p-3">
         <p className="text-sm font-black text-white line-clamp-2 mb-1">{product.title}</p>
         {product.unit && <p className="text-xs text-slate-500 mb-2">{product.unit}</p>}
+
+        {/* Variants selector — like Amazon */}
+        {hasVariants && (
+          <div className="mb-3">
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1.5">Select Option</p>
+            <div className="flex flex-wrap gap-1.5">
+              {product.variants.map((v, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSelectedVariant(i)}
+                  className={`px-2.5 py-1.5 rounded-lg border text-xs font-black transition-all ${
+                    selectedVariant === i
+                      ? "border-blue-400 bg-blue-500/20 text-blue-300"
+                      : "border-white/10 bg-[#22323c] text-slate-400 hover:border-blue-400/40 hover:text-blue-300"
+                  }`}
+                >
+                  <span>{v.label}</span>
+                  <span className={`block text-[10px] mt-0.5 ${selectedVariant === i ? "text-blue-400" : "text-slate-500"}`}>
+                    ₹{v.price}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center gap-2 mb-3">
           <span className="text-base font-black text-blue-400">₹{price}</span>
           {hasDiscount && <span className="text-xs text-slate-500 line-through">₹{actualPrice}</span>}
         </div>
-        <AddToCartButton product={product} className="w-full text-xs py-2 rounded-xl" />
+        <AddToCartButton product={cartProduct} className="w-full text-xs py-2 rounded-xl" />
       </div>
     </div>
   );
 }
+

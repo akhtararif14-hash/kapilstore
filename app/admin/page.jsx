@@ -73,6 +73,76 @@ export default function AdminPanel() {
 }
 
 /* ============================================================
+   VARIANTS EDITOR
+   ============================================================ */
+function VariantsEditor({ variants = [], onChange }) {
+  const [label, setLabel] = useState("");
+  const [price, setPrice] = useState("");
+  const [mrp, setMrp] = useState("");
+
+  const add = () => {
+    if (!label || !price) return;
+    onChange([...variants, { label, price: Number(price), mrp: mrp ? Number(mrp) : undefined }]);
+    setLabel(""); setPrice(""); setMrp("");
+  };
+
+  const remove = (i) => onChange(variants.filter((_, idx) => idx !== i));
+
+  return (
+    <div>
+      <label className="text-xs text-slate-400 mb-2 block font-black uppercase tracking-wider">
+        Variants / Options{" "}
+        <span className="text-amber-400 normal-case font-normal">(optional — e.g. 100 pages, 200 pages)</span>
+      </label>
+
+      {variants.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-3">
+          {variants.map((v, i) => (
+            <div key={i} className="flex items-center gap-1.5 bg-[#22323c] border border-[#17d492]/30 rounded-xl px-3 py-1.5">
+              <span className="text-xs font-black text-white">{v.label}</span>
+              <span className="text-xs text-[#17d492] font-bold">₹{v.price}</span>
+              {v.mrp && <span className="text-xs text-slate-500 line-through">₹{v.mrp}</span>}
+              <button onClick={() => remove(i)} className="text-red-400 text-xs ml-1 hover:text-red-300 font-black">✕</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="flex gap-2 flex-wrap">
+        <input
+          placeholder='Label (e.g. "100 Pages")'
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          className="flex-1 min-w-[120px] px-3 py-2 rounded-xl bg-[#22323c] border border-white/10 text-white text-sm focus:outline-none focus:border-[#17d492]"
+        />
+        <input
+          type="number"
+          placeholder="Price ₹"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          className="w-24 px-3 py-2 rounded-xl bg-[#22323c] border border-white/10 text-white text-sm focus:outline-none focus:border-[#17d492]"
+        />
+        <input
+          type="number"
+          placeholder="MRP ₹"
+          value={mrp}
+          onChange={(e) => setMrp(e.target.value)}
+          className="w-24 px-3 py-2 rounded-xl bg-[#22323c] border border-white/10 text-white text-sm focus:outline-none focus:border-[#17d492]"
+        />
+        <button
+          type="button"
+          onClick={add}
+          disabled={!label || !price}
+          className="px-4 py-2 rounded-xl bg-[#17d492]/20 border border-[#17d492]/40 text-[#17d492] text-sm font-black hover:bg-[#17d492]/30 transition disabled:opacity-30"
+        >
+          + Add
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
    ORDERS
    ============================================================ */
 function OrdersDashboard({ adminKey }) {
@@ -529,6 +599,7 @@ function ProductsDashboard({ adminKey }) {
     images: [],
     category: "stationery",
     subcategory: "",
+    variants: [],
   });
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -588,6 +659,7 @@ function ProductsDashboard({ adminKey }) {
       images: [],
       category: "stationery",
       subcategory: "",
+      variants: [],
     });
     setTimeout(() => setSuccess(false), 3000);
   }
@@ -694,42 +766,44 @@ function ProductsDashboard({ adminKey }) {
         </div>
 
         {/* Price */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="text-xs text-slate-400 mb-1 block font-black uppercase tracking-wider">
-              Price ₹{" "}
-              {isPriceOptional ? (
-                <span className="text-amber-400 normal-case">(optional)</span>
-              ) : (
-                "*"
-              )}
-            </label>
-            <input
-              type="number"
-              placeholder={
-                isPriceOptional ? "Leave blank = Contact us" : "e.g. 99"
-              }
-              required={!isPriceOptional}
-              value={form.price}
-              onChange={(e) => setForm({ ...form, price: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 text-white focus:outline-none focus:border-[#17d492]"
-            />
-          </div>
-          <div>
-            <label className="text-xs text-slate-400 mb-1 block font-black uppercase tracking-wider">
-              MRP ₹ (optional)
-            </label>
-            <input
-              type="number"
-              placeholder="Original price"
-              value={form.actualPrice}
-              onChange={(e) =>
-                setForm({ ...form, actualPrice: e.target.value })
-              }
-              className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 text-white focus:outline-none focus:border-[#17d492]"
-            />
-          </div>
-        </div>
+<div className="grid grid-cols-2 gap-3">
+  <div>
+    <label className="text-xs text-slate-400 mb-1 block font-black uppercase tracking-wider">
+      Price ₹{" "}
+      {isPriceOptional ? (
+        <span className="text-amber-400 normal-case">(optional)</span>
+      ) : (
+        "*"
+      )}
+    </label>
+    <input
+      type="number"
+      placeholder={isPriceOptional ? "Leave blank = Contact us" : "e.g. 99"}
+      required={!isPriceOptional && form.variants.length === 0}
+      value={form.price}
+      onChange={(e) => setForm({ ...form, price: e.target.value })}
+      className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 text-white focus:outline-none focus:border-[#17d492]"
+    />
+  </div>
+  <div>
+    <label className="text-xs text-slate-400 mb-1 block font-black uppercase tracking-wider">
+      MRP ₹ (optional)
+    </label>
+    <input
+      type="number"
+      placeholder="Original price"
+      value={form.actualPrice}
+      onChange={(e) => setForm({ ...form, actualPrice: e.target.value })}
+      className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 text-white focus:outline-none focus:border-[#17d492]"
+    />
+  </div>
+</div>
+
+{/* Variants */}
+<VariantsEditor
+  variants={form.variants}
+  onChange={(variants) => setForm({ ...form, variants })}
+/>
 
         {/* Unit */}
         <div>
