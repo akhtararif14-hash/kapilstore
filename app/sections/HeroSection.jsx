@@ -36,6 +36,10 @@ const Hero = () => {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
+  window.scrollTo(0, 0);
+}, []);
+
+  useEffect(() => {
     const interval = setInterval(() => {
       setVisible(false);
       setTimeout(() => {
