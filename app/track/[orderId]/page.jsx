@@ -200,12 +200,7 @@ export default function TrackOrderPage({ params }) {
                           <p className={`font-black text-sm ${done ? "text-white" : "text-white/20"}`}>
                             {step.label}
                           </p>
-                          {/* "BY ADMIN" badge only on future admin-controlled steps */}
-                          {isAdminStep && !done && (
-                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-white/5 text-white/20">
-                              BY ADMIN
-                            </span>
-                          )}
+
                         </div>
                         {update ? (
                           <p className="text-xs text-slate-500 mt-0.5">
