@@ -160,6 +160,18 @@ export default function ProfilePage() {
         <div>
           <h2 className="text-xl font-black mb-6 text-[#17d492]">My Orders</h2>
 
+          {/* TEMP TEST BUTTON - remove after debugging */}
+<button
+  onClick={async () => {
+    const res = await fetch("/api/user/orders");
+    const data = await res.json();
+    alert(JSON.stringify(data));
+  }}
+  className="mb-4 px-4 py-2 bg-red-500 text-white rounded-xl font-bold"
+>
+  TEST FETCH ORDERS
+</button>
+
           {loading && (
             <div className="flex justify-center py-12">
               <div className="w-8 h-8 border-4 border-[#17d492] border-t-transparent rounded-full animate-spin" />
