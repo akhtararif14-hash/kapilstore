@@ -4,6 +4,7 @@ import { CartProvider } from "./context/CartContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import SessionWrapper from "./components/SessionWrapper";
+import ScrollToTop from "./components/ScrollToTop";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -68,18 +69,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" style={{ backgroundColor: "#0d1f2d" }}>
       <head>
-        {/*
-         * ✅ FIX: White flash on refresh
-         * This inline script runs BEFORE any CSS or React loads.
-         * It sets the background instantly so the browser never
-         * shows a white frame — not even for 1 millisecond.
-         */}
         <script
           dangerouslySetInnerHTML={{
             __html: `document.documentElement.style.backgroundColor = "#0d1f2d";`,
           }}
         />
-
         {/* Google tag (gtag.js) */}
         <script
           async
@@ -102,6 +96,7 @@ export default function RootLayout({ children }) {
       >
         <SessionWrapper>
           <CartProvider>
+            <ScrollToTop />
             <Navbar />
             {children}
             <Footer />

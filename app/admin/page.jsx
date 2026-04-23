@@ -158,6 +158,8 @@ function OrdersDashboard({ adminKey }) {
   });
 
   const STATUS_LABELS = {
+    placed: "Placed",
+    confirmed: "Confirmed",
     preparing: "Preparing",
     out_for_delivery: "Out for Delivery",
     delivered: "Delivered",

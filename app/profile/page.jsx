@@ -25,24 +25,31 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
-    if (session) {
-      setProfile({
-        phone: session.user.phone || "",
-        address: session.user.address || "",
-        isJamiaStudent: session.user.isJamiaStudent || false,
-      });
-      fetchOrders();
-    }
-  }, [session]);
-
   const fetchOrders = async () => {
     try {
       const res = await fetch("/api/user/orders");
+      
+      if (res.status === 401) {
+        console.error("Not authorized - session may not be passing");
+        setOrders([]);
+        return;
+      }
+      
+      if (!res.ok) {
+        console.error("Failed to fetch orders:", res.status);
+        setOrders([]);
+        return;
+      }
+
       const data = await res.json();
+      console.log("Orders response:", data); // ← check this in console
       setOrders(Array.isArray(data) ? data : []);
-    } catch { setOrders([]); }
-    finally { setLoading(false); }
+    } catch (err) {
+      console.error("fetchOrders error:", err);
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const saveProfile = async () => {
@@ -211,4 +218,4 @@ export default function ProfilePage() {
       </div>
     </div>
   );
-}
+};
