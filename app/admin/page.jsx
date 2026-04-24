@@ -688,6 +688,7 @@ function ProductsDashboard({ adminKey }) {
 
       <form
         onSubmit={handleSubmit}
+        noValidate
         className="bg-[#1a2830] rounded-2xl p-6 space-y-5 border border-white/5"
       >
         {/* Category grid */}
