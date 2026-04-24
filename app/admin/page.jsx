@@ -631,12 +631,20 @@ function ProductsDashboard({ adminKey }) {
     return urls;
   }
 
-  async function handleSubmit(e) {
+ async function handleSubmit(e) {
     e.preventDefault();
-    if (!isPriceOptional && !form.price) {
-      alert("Please enter a price");
+
+    // ✅ Fixed: price is only required if:
+    // 1. category is NOT price-optional (e.g. stationery)
+    // 2. AND no variants have been added (variants have their own prices)
+    // 3. AND price field is empty
+    const priceRequired = !isPriceOptional && form.variants.length === 0 && !form.price;
+
+    if (priceRequired) {
+      alert("Please enter a price, or add variants with prices instead.");
       return;
     }
+
     const res = await fetch("/api/admin/products", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-admin-key": adminKey },
