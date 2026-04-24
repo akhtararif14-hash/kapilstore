@@ -139,6 +139,7 @@ export default function StationeryClient() {
 /* ── Stationery Card ── */
 function StationeryCard({ product }) {
   const hasVariants = Array.isArray(product.variants) && product.variants.length > 0;
+  console.log("hasVariants:", hasVariants, "variants:", product.variants);
   const [selectedVariant, setSelectedVariant] = useState(hasVariants ? 0 : null);
   const [imgIdx, setImgIdx] = useState(0);
   const [optionsOpen, setOptionsOpen] = useState(false);
