@@ -209,16 +209,27 @@ function StationeryCard({ product }) {
           <p className="text-xs text-slate-500 mb-2">{product.unit}</p>
         )}
 
-        {/* Collapsible Options */}
-        {hasVariants && (
-          <div className="mb-2">
+        {/* Price row + Options button on same line */}
+        <div className="flex items-center justify-between mb-2 mt-auto">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-lg font-black text-blue-400">₹{price}</span>
+            {hasDiscount && (
+              <>
+                <span className="text-xs text-slate-500 line-through">₹{mrp}</span>
+                <span className="text-xs text-red-400 font-bold">{discountPct}% off</span>
+              </>
+            )}
+          </div>
+
+          {/* Options toggle button — only shown when variants exist */}
+          {hasVariants && (
             <button
               type="button"
               onClick={() => setOptionsOpen((prev) => !prev)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-black transition-all ${
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-full border text-xs font-bold transition-all ${
                 optionsOpen
                   ? "border-blue-400 bg-blue-500/15 text-blue-300"
-                  : "border-white/15 bg-[#22323c] text-slate-400 hover:border-blue-400/40 hover:text-blue-300"
+                  : "border-white/15 bg-[#22323c] text-slate-300 hover:border-blue-400/40 hover:text-blue-300"
               }`}
             >
               options
@@ -232,70 +243,62 @@ function StationeryCard({ product }) {
                 strokeWidth="3"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                style={{ transition: "transform 0.2s", transform: optionsOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+                style={{
+                  transition: "transform 0.2s",
+                  transform: optionsOpen ? "rotate(180deg)" : "rotate(0deg)",
+                }}
               >
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
-
-            {optionsOpen && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {product.variants.map((v, i) => {
-                  const isSelected = selectedVariant === i;
-                  const vMrp = Number(v.mrp || 0);
-                  const vPrice = Number(v.price || 0);
-                  const vDiscount =
-                    vMrp > vPrice
-                      ? Math.round(((vMrp - vPrice) / vMrp) * 100)
-                      : 0;
-
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => setSelectedVariant(i)}
-                      className={`relative flex flex-col items-start px-2.5 py-2 rounded-xl border text-left transition-all min-w-[64px] ${
-                        isSelected
-                          ? "border-blue-400 bg-blue-500/15 ring-1 ring-blue-400/40"
-                          : "border-white/10 bg-[#22323c] hover:border-blue-400/40"
-                      }`}
-                    >
-                      <span className={`text-xs font-black leading-tight ${isSelected ? "text-white" : "text-slate-300"}`}>
-                        {v.label}
-                      </span>
-                      <span className={`text-[11px] font-black mt-0.5 ${isSelected ? "text-blue-400" : "text-slate-400"}`}>
-                        ₹{vPrice}
-                      </span>
-                      {vMrp > vPrice && (
-                        <span className="text-[10px] text-slate-600 line-through leading-none">
-                          ₹{vMrp}
-                        </span>
-                      )}
-                      {vDiscount > 0 && (
-                        <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[8px] font-black px-1 py-0.5 rounded-full leading-none">
-                          -{vDiscount}%
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Price */}
-        <div className="flex items-baseline gap-2 mb-3 mt-auto">
-          <span className="text-lg font-black text-blue-400">₹{price}</span>
-          {hasDiscount && (
-            <>
-              <span className="text-xs text-slate-500 line-through">₹{mrp}</span>
-              <span className="text-xs text-red-400 font-bold">{discountPct}% off</span>
-            </>
           )}
         </div>
 
+        {/* Expandable variant grid */}
+        {hasVariants && optionsOpen && (
+          <div className="mb-3 flex flex-wrap gap-1.5">
+            {product.variants.map((v, i) => {
+              const isSelected = selectedVariant === i;
+              const vMrp = Number(v.mrp || 0);
+              const vPrice = Number(v.price || 0);
+              const vDiscount =
+                vMrp > vPrice ? Math.round(((vMrp - vPrice) / vMrp) * 100) : 0;
+
+              return (
+                <button
+                  key={i}
+                  onClick={() => setSelectedVariant(i)}
+                  className={`relative flex flex-col items-start px-2.5 py-2 rounded-xl border text-left transition-all min-w-[64px] ${
+                    isSelected
+                      ? "border-blue-400 bg-blue-500/15 ring-1 ring-blue-400/40"
+                      : "border-white/10 bg-[#22323c] hover:border-blue-400/40"
+                  }`}
+                >
+                  <span className={`text-xs font-black leading-tight ${isSelected ? "text-white" : "text-slate-300"}`}>
+                    {v.label}
+                  </span>
+                  <span className={`text-[11px] font-black mt-0.5 ${isSelected ? "text-blue-400" : "text-slate-400"}`}>
+                    ₹{vPrice}
+                  </span>
+                  {vMrp > vPrice && (
+                    <span className="text-[10px] text-slate-600 line-through leading-none">
+                      ₹{vMrp}
+                    </span>
+                  )}
+                  {vDiscount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[8px] font-black px-1 py-0.5 rounded-full leading-none">
+                      -{vDiscount}%
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Selected variant label */}
         {hasVariants && product.variants[selectedVariant]?.label && (
-          <p className="text-[10px] text-slate-500 -mt-2 mb-3">
+          <p className="text-[10px] text-slate-500 mb-2">
             Selected: <span className="text-blue-300 font-bold">{product.variants[selectedVariant].label}</span>
           </p>
         )}
