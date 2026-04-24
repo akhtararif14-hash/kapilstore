@@ -789,7 +789,6 @@ function ProductsDashboard({ adminKey }) {
     <input
       type="number"
       placeholder={isPriceOptional ? "Leave blank = Contact us" : "e.g. 99"}
-      required={!isPriceOptional && form.variants.length === 0}
       value={form.price}
       onChange={(e) => setForm({ ...form, price: e.target.value })}
       className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 text-white focus:outline-none focus:border-[#17d492]"
