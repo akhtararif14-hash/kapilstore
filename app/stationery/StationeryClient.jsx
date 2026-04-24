@@ -1,151 +1,8 @@
-"use client";
-
-import { useEffect, useState, useMemo } from "react";
-import Link from "next/link";
-import { FaSearch, FaShoppingCart, FaFilter } from "react-icons/fa";
-import { MdMenuBook } from "react-icons/md";
-import AddToCartButton from "../components/AddToCartButton";
-
-const SUBCATEGORIES = [
-  { id: "all", label: "All" },
-  { id: "books-notebooks", label: "Books & Notebooks" },
-  { id: "calculators", label: "Calculators" },
-  { id: "drawing-materials", label: "Drawing Materials" },
-  { id: "pens", label: "Pens" },
-  { id: "files-folders", label: "Files & Folders" },
-  { id: "btech-polytechnic", label: "BTech / Polytechnic" },
-  { id: "xerox-printout", label: "Xerox / Printout" },
-  { id: "jamia-school", label: "Jamia School" },
-  { id: "other-stationery", label: "Other" },
-];
-
-export default function StationeryClient() {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [activeSub, setActiveSub] = useState("all");
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch("/api/products?category=stationery");
-        const data = await res.json();
-        setProducts(Array.isArray(data) ? data : []);
-      } catch {
-        setProducts([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, []);
-
-  const filtered = useMemo(() => {
-    return products.filter((p) => {
-      const matchSub = activeSub === "all" || p.subcategory === activeSub;
-      const q = search.toLowerCase();
-      const matchSearch =
-        !q ||
-        p.title?.toLowerCase().includes(q) ||
-        p.description?.toLowerCase().includes(q);
-      return matchSub && matchSearch;
-    });
-  }, [products, activeSub, search]);
-
-  return (
-    <div className="min-h-screen bg-[#22323c] text-[#f5f5f5]">
-      {/* Hero */}
-      <div className="bg-[#1a2830] border-b border-white/5 pt-28 pb-10 px-4">
-        <div className="max-w-5xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-4 py-1.5 mb-4">
-            <span className="text-blue-400 text-xs font-black uppercase tracking-widest">✏️ Stationery Store</span>
-          </div>
-          <h1 className="text-4xl md:text-5xl font-black mb-3">
-            All <span className="text-blue-400">Stationery</span> Items
-          </h1>
-          <p className="text-white/40 text-base max-w-xl mx-auto">
-            
-          </p>
-        </div>
-      </div>
-
-      {/* Sticky filter bar */}
-      <div className="sticky top-[60px] z-30 bg-[#22323c]/95 backdrop-blur-md border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row gap-3">
-          {/* Search */}
-          <div className="relative sm:w-72">
-            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[#17d492]/40 text-xs pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search stationery..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[#1a2830] border border-white/10
-                focus:outline-none focus:border-blue-400 text-white placeholder:text-white/20 text-sm transition"
-            />
-          </div>
-
-          {/* Subcategory pills */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-0.5 flex-1">
-            {SUBCATEGORIES.map((sub) => (
-              <button
-                key={sub.id}
-                onClick={() => setActiveSub(sub.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-black whitespace-nowrap transition shrink-0 ${
-                  activeSub === sub.id
-                    ? "bg-blue-500 text-white"
-                    : "bg-[#1a2830] text-slate-400 border border-white/10 hover:border-blue-400/40 hover:text-blue-300"
-                }`}
-              >
-                {sub.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Products */}
-      <div className="max-w-7xl mx-auto px-4 py-10">
-        {loading && (
-          <div className="flex justify-center py-32">
-            <div className="w-10 h-10 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
-
-        {!loading && filtered.length === 0 && (
-          <div className="text-center py-28">
-            <p className="text-5xl mb-4">✏️</p>
-            <p className="text-white/30 font-bold text-lg">No products found</p>
-            {search && (
-              <button onClick={() => setSearch("")} className="mt-3 text-blue-400 text-sm font-bold underline">
-                Clear search
-              </button>
-            )}
-          </div>
-        )}
-
-        {!loading && filtered.length > 0 && (
-          <>
-            <p className="text-slate-500 text-sm font-bold mb-5">
-              Showing <span className="text-blue-400">{filtered.length}</span> products
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {filtered.map((product) => (
-                <StationeryCard key={product._id} product={product} />
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}// Replace only the StationeryCard function in your StationeryClient.jsx
-// Everything else stays the same
-
 function StationeryCard({ product }) {
   const hasVariants = Array.isArray(product.variants) && product.variants.length > 0;
   const [selectedVariant, setSelectedVariant] = useState(hasVariants ? 0 : null);
   const [imgIdx, setImgIdx] = useState(0);
+  const [optionsOpen, setOptionsOpen] = useState(false); // ← new
 
   const price = hasVariants
     ? Number(product.variants[selectedVariant]?.price || 0)
@@ -213,70 +70,91 @@ function StationeryCard({ product }) {
           <p className="text-xs text-slate-500 mb-2">{product.unit}</p>
         )}
 
-        {/* ── Amazon-style variant chips ── */}
+        {/* ── Collapsible Options ── */}
         {hasVariants && (
-          <div className="mb-3">
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1.5">
-              Options
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {product.variants.map((v, i) => {
-                const isSelected = selectedVariant === i;
-                const vMrp = Number(v.mrp || 0);
-                const vPrice = Number(v.price || 0);
-                const vDiscount = vMrp > vPrice
-                  ? Math.round(((vMrp - vPrice) / vMrp) * 100)
-                  : 0;
+          <div className="mb-2">
+            {/* Toggle button */}
+            <button
+              type="button"
+              onClick={() => setOptionsOpen((prev) => !prev)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-black transition-all ${
+                optionsOpen
+                  ? "border-blue-400 bg-blue-500/15 text-blue-300"
+                  : "border-white/15 bg-[#22323c] text-slate-400 hover:border-blue-400/40 hover:text-blue-300"
+              }`}
+            >
+              options
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={`transition-transform duration-200 ${optionsOpen ? "rotate-180" : ""}`}
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
 
-                return (
-                  <button
-                    key={i}
-                    onClick={() => setSelectedVariant(i)}
-                    className={`relative flex flex-col items-start px-2.5 py-2 rounded-xl border text-left transition-all min-w-[64px] ${
-                      isSelected
-                        ? "border-blue-400 bg-blue-500/15 ring-1 ring-blue-400/40"
-                        : "border-white/10 bg-[#22323c] hover:border-blue-400/40"
-                    }`}
-                  >
-                    {/* Variant label */}
-                    <span
-                      className={`text-xs font-black leading-tight ${
-                        isSelected ? "text-white" : "text-slate-300"
+            {/* Expandable variant chips */}
+            {optionsOpen && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {product.variants.map((v, i) => {
+                  const isSelected = selectedVariant === i;
+                  const vMrp = Number(v.mrp || 0);
+                  const vPrice = Number(v.price || 0);
+                  const vDiscount =
+                    vMrp > vPrice
+                      ? Math.round(((vMrp - vPrice) / vMrp) * 100)
+                      : 0;
+
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => setSelectedVariant(i)}
+                      className={`relative flex flex-col items-start px-2.5 py-2 rounded-xl border text-left transition-all min-w-[64px] ${
+                        isSelected
+                          ? "border-blue-400 bg-blue-500/15 ring-1 ring-blue-400/40"
+                          : "border-white/10 bg-[#22323c] hover:border-blue-400/40"
                       }`}
                     >
-                      {v.label}
-                    </span>
-
-                    {/* Price */}
-                    <span
-                      className={`text-[11px] font-black mt-0.5 ${
-                        isSelected ? "text-blue-400" : "text-slate-400"
-                      }`}
-                    >
-                      ₹{vPrice}
-                    </span>
-
-                    {/* MRP strikethrough */}
-                    {vMrp > vPrice && (
-                      <span className="text-[10px] text-slate-600 line-through leading-none">
-                        ₹{vMrp}
+                      <span
+                        className={`text-xs font-black leading-tight ${
+                          isSelected ? "text-white" : "text-slate-300"
+                        }`}
+                      >
+                        {v.label}
                       </span>
-                    )}
-
-                    {/* Discount badge on chip */}
-                    {vDiscount > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[8px] font-black px-1 py-0.5 rounded-full leading-none">
-                        -{vDiscount}%
+                      <span
+                        className={`text-[11px] font-black mt-0.5 ${
+                          isSelected ? "text-blue-400" : "text-slate-400"
+                        }`}
+                      >
+                        ₹{vPrice}
                       </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+                      {vMrp > vPrice && (
+                        <span className="text-[10px] text-slate-600 line-through leading-none">
+                          ₹{vMrp}
+                        </span>
+                      )}
+                      {vDiscount > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[8px] font-black px-1 py-0.5 rounded-full leading-none">
+                          -{vDiscount}%
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
-        {/* ── Price display (updates on chip click) ── */}
+        {/* ── Price display ── */}
         <div className="flex items-baseline gap-2 mb-3 mt-auto">
           <span className="text-lg font-black text-blue-400">₹{price}</span>
           {hasDiscount && (
@@ -287,10 +165,13 @@ function StationeryCard({ product }) {
           )}
         </div>
 
-        {/* Per-unit price (like Amazon's ₹141/count) */}
+        {/* Selected variant label */}
         {hasVariants && product.variants[selectedVariant]?.label && (
           <p className="text-[10px] text-slate-500 -mt-2 mb-3">
-            Selected: <span className="text-blue-300 font-bold">{product.variants[selectedVariant].label}</span>
+            Selected:{" "}
+            <span className="text-blue-300 font-bold">
+              {product.variants[selectedVariant].label}
+            </span>
           </p>
         )}
 
