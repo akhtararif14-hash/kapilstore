@@ -28,6 +28,7 @@ export default function StationeryClient() {
       try {
         const res = await fetch("/api/products?category=stationery");
         const data = await res.json();
+        console.log("RAW PRODUCTS FROM API:", JSON.stringify(data, null, 2));
         setProducts(Array.isArray(data) ? data : []);
       } catch {
         setProducts([]);
