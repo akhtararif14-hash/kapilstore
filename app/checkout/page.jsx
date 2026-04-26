@@ -533,11 +533,11 @@ export default function CheckoutPage() {
                       className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 focus:outline-none focus:border-[#17d492] transition"
                     />
                     <div>
-                      <p className="mb-2 font-bold text-[#17d492] text-sm">Are you a Jamia student? *</p>
+                      <p className="mb-2 font-bold text-[#17d492] text-sm">Are you residing on the Jamia campus? *</p>
                       <div className="flex gap-3">
                         {[
-                          { val: true, label: "Yes — Jamia Student" },
-                          { val: false, label: "No — Outside Jamia" },
+                          { val: true, label: "Yes " },
+                          { val: false, label: "No " },
                         ].map((opt) => (
                           <label
                             key={String(opt.val)}
