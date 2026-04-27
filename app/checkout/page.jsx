@@ -472,7 +472,7 @@ export default function CheckoutPage() {
                         </div>
                       )}
                       <div className="flex justify-between text-sm">
-                        <span className="text-slate-500 shrink-0">Jamia Student</span>
+                        <span className="text-slate-500 shrink-0">Jamia Campus Resident</span>
                         <span className={`font-bold ${isJamiaStudent ? "text-[#17d492]" : "text-slate-300"}`}>
                           {isJamiaStudent ? "Yes" : "No"}
                         </span>
