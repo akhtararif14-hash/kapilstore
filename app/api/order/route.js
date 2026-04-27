@@ -23,7 +23,6 @@ export async function POST(req) {
       utrNumber,
     } = body;
 
-    // ── Validation ───────────────────────────────────────────────
     if (!customer?.name || !customer?.phone || !customer?.address) {
       return Response.json(
         { message: "Missing required customer fields" },
@@ -37,7 +36,6 @@ export async function POST(req) {
       return Response.json({ message: "Invalid order total" }, { status: 400 });
     }
 
-    // ── Generate orderId and orderCategory ───────────────────────
     const orderId =
       "ORD-" +
       Date.now() +
@@ -45,7 +43,6 @@ export async function POST(req) {
       Math.random().toString(36).substring(2, 7).toUpperCase();
     const orderCategory = cart[0]?.category || "stationery";
 
-    // ── Save order ───────────────────────────────────────────────
     const order = new Order({
       orderId,
       userId: userId || null,
@@ -85,7 +82,6 @@ export async function POST(req) {
 
     await order.save();
 
-    // ── Send emails + Telegram (non-blocking) ────────────────────
     sendEmails({
       customer,
       cart,
@@ -131,6 +127,7 @@ async function sendTelegramNotification({
   if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_CHAT_ID) return;
 
   const isCOD = paymentMethod === "cod";
+  const waLink = "https://wa.me/91" + customer.phone;
 
   const itemsList = cart
     .map(
@@ -152,7 +149,8 @@ async function sendTelegramNotification({
     "",
     "👤 *Customer*",
     "Name: " + customer.name,
-    "Phone: " + customer.phone,
+    // ── Clickable WhatsApp link in Telegram ──
+    "Phone: [" + customer.phone + "](" + waLink + ")",
     "Email: " + (customer.email || "N/A"),
     "Jamia Student: " + (customer.isJamiaStudent ? "Yes" : "No"),
     "Address: " + customer.address,
@@ -166,6 +164,8 @@ async function sendTelegramNotification({
     isCOD
       ? "⚠️ Collect ₹" + total + " cash at delivery"
       : "✅ Payment received",
+    "",
+    "💬 [Chat on WhatsApp](" + waLink + ")",
   ].join("\n");
 
   await fetch(
@@ -203,6 +203,7 @@ async function sendEmails({
   });
 
   const isCOD = paymentMethod === "cod";
+  const waLink = "https://wa.me/91" + customer.phone;
 
   const itemsList = cart
     .map(
@@ -215,33 +216,48 @@ async function sendEmails({
     )
     .join("\n");
 
-  // ── 1. Owner notification ─────────────────────────────────────
+  // ── 1. Owner notification (HTML so phone is a clickable link) ──
+  const ownerHtml =
+    '<div style="font-family:Arial,sans-serif;font-size:14px;color:#111;line-height:1.7;">' +
+    '<h2 style="margin:0 0 12px;">' +
+    (isCOD ? "💵 New COD Order: " : "✅ New Online Order: ") +
+    orderId +
+    "</h2>" +
+    '<p style="margin:0 0 4px;">' +
+    (isCOD
+      ? "⚠️ <strong>CASH ON DELIVERY</strong> — Collect Rs." + total + " at delivery"
+      : "✅ <strong>ONLINE PAYMENT ORDER</strong>") +
+    "</p>" +
+    "<hr/>" +
+    '<p style="margin:8px 0 4px;"><strong>Order ID:</strong> ' + orderId + "</p>" +
+    '<p style="margin:4px 0;"><strong>Category:</strong> ' + orderCategory + "</p>" +
+    '<p style="margin:4px 0;"><strong>Name:</strong> ' + customer.name + "</p>" +
+    // ── Clickable WhatsApp button in owner email ──
+    '<p style="margin:4px 0;"><strong>Phone:</strong> ' +
+    '<a href="' + waLink + '" ' +
+    'style="display:inline-flex;align-items:center;gap:6px;background:#25d366;color:#fff;' +
+    'text-decoration:none;padding:4px 12px;border-radius:20px;font-weight:700;font-size:13px;">' +
+    '📱 ' + customer.phone + ' — WhatsApp' +
+    "</a></p>" +
+    '<p style="margin:4px 0;"><strong>Email:</strong> ' + (customer.email || "N/A") + "</p>" +
+    '<p style="margin:4px 0;"><strong>Address:</strong> ' + customer.address + "</p>" +
+    '<p style="margin:4px 0;"><strong>Jamia Student:</strong> ' + (customer.isJamiaStudent ? "Yes" : "No") + "</p>" +
+    "<hr/>" +
+    '<p style="margin:8px 0 4px;"><strong>Items:</strong></p>' +
+    "<pre>" + itemsList + "</pre>" +
+    "<hr/>" +
+    '<p style="margin:4px 0;"><strong>Delivery Charge:</strong> Rs.' + deliveryCharge + "</p>" +
+    '<p style="margin:4px 0;"><strong>Total:</strong> Rs.' + total + "</p>" +
+    '<p style="margin:4px 0;"><strong>Payment:</strong> ' + (paymentMethod || "razorpay").toUpperCase() + "</p>" +
+    '<p style="margin:4px 0;"><strong>UTR Number:</strong> ' + (utrNumber || "N/A") + "</p>" +
+    '<p style="margin:4px 0;"><strong>Timestamp:</strong> ' + new Date().toLocaleString() + "</p>" +
+    "</div>";
+
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
     to: process.env.EMAIL_USER,
     subject: (isCOD ? "💵 New COD Order: " : "✅ New Online Order: ") + orderId,
-    text: [
-      isCOD
-        ? "⚠️  CASH ON DELIVERY ORDER — Collect Rs." + total + " at delivery"
-        : "✅ ONLINE PAYMENT ORDER",
-      "",
-      "Order ID: " + orderId,
-      "Category: " + orderCategory,
-      "Name: " + customer.name,
-      "Phone: " + customer.phone,
-      "Email: " + (customer.email || "N/A"),
-      "Address: " + customer.address,
-      "Jamia Student: " + (customer.isJamiaStudent ? "Yes" : "No"),
-      "",
-      "Items:",
-      itemsList,
-      "",
-      "Delivery Charge: Rs." + deliveryCharge,
-      "Total Amount: Rs." + total,
-      "Payment: " + (paymentMethod || "razorpay").toUpperCase(),
-      "UTR Number: " + (utrNumber || "N/A"),
-      "Timestamp: " + new Date().toLocaleString(),
-    ].join("\n"),
+    html: ownerHtml,
   });
 
   // ── 2. Customer confirmation email ────────────────────────────
