@@ -234,7 +234,7 @@ function StationeryCard({ product }) {
                   : "border-white/15 bg-[#22323c] text-slate-300 hover:border-blue-400/40 hover:text-blue-300"
               }`}
             >
-              options
+              opt
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="10"
