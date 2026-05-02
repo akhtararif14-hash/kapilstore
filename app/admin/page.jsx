@@ -625,7 +625,7 @@ function ProductsDashboard({ adminKey }) {
       data.append("file", file);
       data.append("upload_preset", "products"); // make sure this preset exists in new account
       const res = await fetch(
-        "https://api.cloudinary.com/v1_1/YOUR_NEW_CLOUD_NAME/image/upload", // ← put your new cloud name here
+        "https://api.cloudinary.com/v1_1/Root/image/upload", // ← put your new cloud name here
         { method: "POST", body: data },
       );
       const json = await res.json();
