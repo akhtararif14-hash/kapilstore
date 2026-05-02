@@ -9,11 +9,11 @@ export async function POST(req) {
     }
 
     const body = await req.json();
-    const { title, description, price, actualPrice, images, category, subcategory, unit } = body;
+   const { title, description, price, actualPrice, images, category, subcategory, unit, variants } = body;
 
-    if (!title || !price) {
-      return Response.json({ error: "Title and price are required" }, { status: 400 });
-    }
+   if (!title) {
+  return Response.json({ error: "Title is required" }, { status: 400 });
+}
 
     await connectDB();
 
@@ -28,6 +28,7 @@ export async function POST(req) {
       category: category || "stationery",
       subcategory: subcategory || "",
       unit: unit || "",
+      variants: Array.isArray(variants) ? variants : [],
     });
 
     return Response.json(product, { status: 201 });
