@@ -618,26 +618,27 @@ function ProductsDashboard({ adminKey }) {
   const isPriceOptional = activeCat?.priceOptional || false;
 
   async function uploadImages(files) {
-    setUploading(true);
-    const urls = [];
-    for (const file of files) {
-      const data = new FormData();
-      data.append("file", file);
-      data.append("upload_preset", "products"); // make sure this preset exists in new account
-      const res = await fetch(
-        "https://api.cloudinary.com/v1_1/Root/image/upload", // ← put your new cloud name here
-        { method: "POST", body: data },
-      );
-      const json = await res.json();
-      if (!res.ok) {
-        alert(json.error?.message || "Upload failed");
-        continue;
-      }
-      urls.push(json.secure_url);
+  setUploading(true);
+  const urls = [];
+  for (const file of files) {
+    const data = new FormData();
+    data.append("file", file);
+    data.append("upload_preset", "products");
+    const res = await fetch(
+      "https://api.cloudinary.com/v1_1/YOUR_NEW_CLOUD_NAME/image/upload",
+      { method: "POST", body: data },
+    );
+    const json = await res.json();
+    console.log("Cloudinary response:", JSON.stringify(json)); // ← ADD THIS
+    if (!res.ok) {
+      alert("Upload error: " + JSON.stringify(json.error)); // ← CHANGED THIS
+      continue;
     }
-    setUploading(false);
-    return urls;
+    urls.push(json.secure_url);
   }
+  setUploading(false);
+  return urls;
+}
 
  async function handleSubmit(e) {
     e.preventDefault();
