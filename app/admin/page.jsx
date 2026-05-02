@@ -625,7 +625,7 @@ function ProductsDashboard({ adminKey }) {
     data.append("file", file);
     data.append("upload_preset", "products");
     const res = await fetch(
-      "https://api.cloudinary.com/v1_1/YOUR_NEW_CLOUD_NAME/image/upload",
+      "https://api.cloudinary.com/v1_1/dppzkgajf/image/upload",
       { method: "POST", body: data },
     );
     const json = await res.json();
