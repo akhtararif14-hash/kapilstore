@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { FaSearch } from "react-icons/fa";
 import AddToCartButton from "../components/AddToCartButton";
 
@@ -22,6 +22,7 @@ export default function StationeryClient() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeSub, setActiveSub] = useState("all");
+  const scrollRef = useRef(null);
 
   useEffect(() => {
     async function load() {
@@ -50,6 +51,14 @@ export default function StationeryClient() {
       return matchSub && matchSearch;
     });
   }, [products, activeSub, search]);
+
+  const scrollLeft = () => {
+    scrollRef.current?.scrollBy({ left: -160, behavior: "smooth" });
+  };
+
+  const scrollRight = () => {
+    scrollRef.current?.scrollBy({ left: 160, behavior: "smooth" });
+  };
 
   return (
     <div className="min-h-screen bg-[#22323c] text-[#f5f5f5]">
@@ -81,21 +90,53 @@ export default function StationeryClient() {
             />
           </div>
 
-          {/* Subcategory pills */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-0.5 flex-1">
-            {SUBCATEGORIES.map((sub) => (
-              <button
-                key={sub.id}
-                onClick={() => setActiveSub(sub.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-black whitespace-nowrap transition shrink-0 ${
-                  activeSub === sub.id
-                    ? "bg-blue-500 text-white"
-                    : "bg-[#1a2830] text-slate-400 border border-white/10 hover:border-blue-400/40 hover:text-blue-300"
-                }`}
-              >
-                {sub.label}
-              </button>
-            ))}
+          {/* Subcategory pills with nav arrows */}
+          <div className="flex items-center gap-1 flex-1 min-w-0">
+            {/* Left arrow */}
+            <button
+              onClick={scrollLeft}
+              className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg bg-[#1a2830] border border-white/10 text-slate-400 hover:text-blue-300 hover:border-blue-400/40 transition"
+              aria-label="Scroll left"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+
+            {/* Scrollable pills — no scrollbar */}
+            <div
+              ref={scrollRef}
+              className="flex items-center gap-2 overflow-x-auto flex-1 pb-0.5"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+              <style>{`
+                .subcategory-scroll::-webkit-scrollbar { display: none; }
+              `}</style>
+              {SUBCATEGORIES.map((sub) => (
+                <button
+                  key={sub.id}
+                  onClick={() => setActiveSub(sub.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black whitespace-nowrap transition shrink-0 ${
+                    activeSub === sub.id
+                      ? "bg-blue-500 text-white"
+                      : "bg-[#1a2830] text-slate-400 border border-white/10 hover:border-blue-400/40 hover:text-blue-300"
+                  }`}
+                >
+                  {sub.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Right arrow */}
+            <button
+              onClick={scrollRight}
+              className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg bg-[#1a2830] border border-white/10 text-slate-400 hover:text-blue-300 hover:border-blue-400/40 transition"
+              aria-label="Scroll right"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
