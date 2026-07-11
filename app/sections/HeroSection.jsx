@@ -62,7 +62,7 @@ const Hero = () => {
         {/* ── Left column ── */}
         <div className="hero-left">
           <h1 className="heading">
-            <span className="heading-script">Official Assignment</span>
+            <span className="heading-script">Arif</span>
             <span className="heading-amp">&amp;</span>
             <span className="heading-script">Stationery Hub</span>
           </h1>
