@@ -1,5 +1,6 @@
 import { connectDB } from "@/lib/mongodb";
 import Order from "@/models/Order";
+import { cookies } from "next/headers";
 
 const STATUS_MESSAGES = {
   placed: "Order placed successfully",
@@ -12,14 +13,24 @@ const STATUS_MESSAGES = {
 
 export async function POST(req) {
   try {
-    const adminKey = req.headers.get("x-admin-key");
-    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    // Verify admin authentication
+    const cookieStore = await cookies();
+    const admin = cookieStore.get("admin");
+
+    if (!admin || admin.value !== process.env.ADMIN_KEY) {
+      return Response.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     const { orderId, status, lat, lng, message } = await req.json();
+
     if (!orderId || !status) {
-      return Response.json({ error: "orderId and status required" }, { status: 400 });
+      return Response.json(
+        { error: "orderId and status required" },
+        { status: 400 }
+      );
     }
 
     await connectDB();
@@ -29,20 +40,46 @@ export async function POST(req) {
       message: message || STATUS_MESSAGES[status] || status,
       timestamp: new Date(),
     };
-    if (lat && lng) trackingEntry.location = { lat, lng };
+
+    if (lat && lng) {
+      trackingEntry.location = { lat, lng };
+    }
 
     const updateOp = {
       status,
-      $push: { trackingUpdates: trackingEntry },
+      $push: {
+        trackingUpdates: trackingEntry,
+      },
     };
-    if (lat && lng) updateOp.deliveryLocation = { lat, lng };
 
-    const order = await Order.findOneAndUpdate({ orderId }, updateOp, { new: true });
-    if (!order) return Response.json({ error: "Order not found" }, { status: 404 });
+    if (lat && lng) {
+      updateOp.deliveryLocation = { lat, lng };
+    }
 
-    return Response.json({ success: true, order });
+    const order = await Order.findOneAndUpdate(
+      { orderId },
+      updateOp,
+      { new: true }
+    );
+
+    if (!order) {
+      return Response.json(
+        { error: "Order not found" },
+        { status: 404 }
+      );
+    }
+
+    return Response.json({
+      success: true,
+      order,
+    });
+
   } catch (err) {
-    console.error(err);
-    return Response.json({ error: "Server error" }, { status: 500 });
+    console.error("Track Order Error:", err);
+
+    return Response.json(
+      { error: "Server error" },
+      { status: 500 }
+    );
   }
 }

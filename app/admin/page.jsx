@@ -5,7 +5,58 @@ import { useEffect, useState } from "react";
 export default function AdminPanel() {
   const [tab, setTab] = useState("orders");
   const [adminKey, setAdminKey] = useState("");
-  const [authorized, setAuthorized] = useState(false);
+  const [authorized, setAuthorized] = useState(null);
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const res = await fetch("/api/admin/verify");
+      const data = await res.json();
+      setAuthorized(data.authorized);
+    } catch {
+      setAuthorized(false);
+    }
+  };
+
+  const login = async () => {
+    const res = await fetch("/api/admin/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        password: adminKey,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      setAuthorized(true);
+    } else {
+      alert("Wrong Admin Password");
+    }
+  };
+
+  const logout = async () => {
+    await fetch("/api/admin/logout", {
+      method: "POST",
+    });
+
+    setAuthorized(false);
+    setAdminKey("");
+  };
+
+  if (authorized === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#22323c] text-white">
+        Loading...
+      </div>
+    );
+  }
 
   if (!authorized) {
     return (
@@ -14,21 +65,25 @@ export default function AdminPanel() {
           <h2 className="text-2xl font-black text-[#17d492] mb-6">
             Admin Login
           </h2>
+
           <input
             type="password"
-            placeholder="Enter Admin Key"
+            placeholder="Enter Admin Password"
             value={adminKey}
             onChange={(e) => setAdminKey(e.target.value)}
-            onKeyDown={(e) =>
-              e.key === "Enter" && adminKey && setAuthorized(true)
-            }
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                login();
+              }
+            }}
             className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 text-white focus:outline-none focus:border-[#17d492] mb-4 transition"
           />
+
           <button
-            onClick={() => adminKey && setAuthorized(true)}
+            onClick={login}
             className="w-full bg-[#17d492] text-[#22323c] py-3 rounded-xl font-black hover:bg-[#14b87e] transition"
           >
-            Enter
+            Login
           </button>
         </div>
       </div>
@@ -45,100 +100,88 @@ export default function AdminPanel() {
   return (
     <div className="min-h-screen bg-[#22323c] text-[#f5f5f5] pt-24 pb-12">
       <div className="max-w-7xl mx-auto px-4 md:px-6">
-        <h1 className="text-3xl font-black text-[#17d492] mb-8">Admin Panel</h1>
+
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-black text-[#17d492]">
+            Admin Panel
+          </h1>
+
+          <button
+            onClick={logout}
+            className="bg-red-500 px-4 py-2 rounded-xl font-bold hover:bg-red-600 transition"
+          >
+            Logout
+          </button>
+        </div>
 
         <div className="flex gap-2 mb-8 overflow-x-auto pb-1">
           {TABS.map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`px-5 py-2.5 rounded-xl font-black text-sm whitespace-nowrap transition ${
-                tab === t.id
+              className={`px-5 py-2.5 rounded-xl font-black text-sm whitespace-nowrap transition ${tab === t.id
                   ? "bg-[#17d492] text-[#22323c]"
                   : "bg-[#1a2830] text-white border border-white/10 hover:border-[#17d492]/40"
-              }`}
+                }`}
             >
               {t.label}
             </button>
           ))}
         </div>
 
-        {tab === "orders" && <OrdersDashboard adminKey={adminKey} />}
-        {tab === "add-product" && <ProductsDashboard adminKey={adminKey} />}
-        {tab === "view-products" && <ViewProducts adminKey={adminKey} />}
-        {tab === "pyqs" && <PYQDashboard adminKey={adminKey} />}
+        {tab === "orders" && <OrdersDashboard />}
+        {tab === "add-product" && <ProductsDashboard />}
+        {tab === "view-products" && <ViewProducts />}
+        {tab === "pyqs" && <PYQDashboard />}
       </div>
     </div>
   );
+} {
+  variants.length > 0 && (
+    <div className="flex flex-wrap gap-2 mb-3">
+      {variants.map((v, i) => (
+        <div key={i} className="flex items-center gap-1.5 bg-[#22323c] border border-[#17d492]/30 rounded-xl px-3 py-1.5">
+          <span className="text-xs font-black text-white">{v.label}</span>
+          <span className="text-xs text-[#17d492] font-bold">₹{v.price}</span>
+          {v.mrp && <span className="text-xs text-slate-500 line-through">₹{v.mrp}</span>}
+          <button onClick={() => remove(i)} className="text-red-400 text-xs ml-1 hover:text-red-300 font-black">✕</button>
+        </div>
+      ))}
+    </div>
+  )
 }
 
-/* ============================================================
-   VARIANTS EDITOR
-   ============================================================ */
-function VariantsEditor({ variants = [], onChange }) {
-  const [label, setLabel] = useState("");
-  const [price, setPrice] = useState("");
-  const [mrp, setMrp] = useState("");
-
-  const add = () => {
-    if (!label || !price) return;
-    onChange([...variants, { label, price: Number(price), mrp: mrp ? Number(mrp) : undefined }]);
-    setLabel(""); setPrice(""); setMrp("");
-  };
-
-  const remove = (i) => onChange(variants.filter((_, idx) => idx !== i));
-
-  return (
-    <div>
-      <label className="text-xs text-slate-400 mb-2 block font-black uppercase tracking-wider">
-        Variants / Options{" "}
-        <span className="text-amber-400 normal-case font-normal">(optional — e.g. 100 pages, 200 pages)</span>
-      </label>
-
-      {variants.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-3">
-          {variants.map((v, i) => (
-            <div key={i} className="flex items-center gap-1.5 bg-[#22323c] border border-[#17d492]/30 rounded-xl px-3 py-1.5">
-              <span className="text-xs font-black text-white">{v.label}</span>
-              <span className="text-xs text-[#17d492] font-bold">₹{v.price}</span>
-              {v.mrp && <span className="text-xs text-slate-500 line-through">₹{v.mrp}</span>}
-              <button onClick={() => remove(i)} className="text-red-400 text-xs ml-1 hover:text-red-300 font-black">✕</button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="flex gap-2 flex-wrap">
-        <input
-          placeholder='Label (e.g. "100 Pages")'
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          className="flex-1 min-w-[120px] px-3 py-2 rounded-xl bg-[#22323c] border border-white/10 text-white text-sm focus:outline-none focus:border-[#17d492]"
-        />
-        <input
-          type="number"
-          placeholder="Price ₹"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          className="w-24 px-3 py-2 rounded-xl bg-[#22323c] border border-white/10 text-white text-sm focus:outline-none focus:border-[#17d492]"
-        />
-        <input
-          type="number"
-          placeholder="MRP ₹"
-          value={mrp}
-          onChange={(e) => setMrp(e.target.value)}
-          className="w-24 px-3 py-2 rounded-xl bg-[#22323c] border border-white/10 text-white text-sm focus:outline-none focus:border-[#17d492]"
-        />
-        <button
-          type="button"
-          onClick={add}
-          disabled={!label || !price}
-          className="px-4 py-2 rounded-xl bg-[#17d492]/20 border border-[#17d492]/40 text-[#17d492] text-sm font-black hover:bg-[#17d492]/30 transition disabled:opacity-30"
-        >
-          + Add
-        </button>
-      </div>
-    </div>
+<div className="flex gap-2 flex-wrap">
+  <input
+    placeholder='Label (e.g. "100 Pages")'
+    value={label}
+    onChange={(e) => setLabel(e.target.value)}
+    className="flex-1 min-w-[120px] px-3 py-2 rounded-xl bg-[#22323c] border border-white/10 text-white text-sm focus:outline-none focus:border-[#17d492]"
+  />
+  <input
+    type="number"
+    placeholder="Price ₹"
+    value={price}
+    onChange={(e) => setPrice(e.target.value)}
+    className="w-24 px-3 py-2 rounded-xl bg-[#22323c] border border-white/10 text-white text-sm focus:outline-none focus:border-[#17d492]"
+  />
+  <input
+    type="number"
+    placeholder="MRP ₹"
+    value={mrp}
+    onChange={(e) => setMrp(e.target.value)}
+    className="w-24 px-3 py-2 rounded-xl bg-[#22323c] border border-white/10 text-white text-sm focus:outline-none focus:border-[#17d492]"
+  />
+  <button
+    type="button"
+    onClick={add}
+    disabled={!label || !price}
+    className="px-4 py-2 rounded-xl bg-[#17d492]/20 border border-[#17d492]/40 text-[#17d492] text-sm font-black hover:bg-[#17d492]/30 transition disabled:opacity-30"
+  >
+    + Add
+  </button>
+</div>
+    </div >
   );
 }
 
@@ -177,9 +220,7 @@ function OrdersDashboard({ adminKey }) {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/orders", {
-        headers: { "x-admin-key": adminKey },
-      });
+      const res = await fetch("/api/admin/orders");
       const data = await res.json();
       setOrders(Array.isArray(data) ? data : []);
     } catch {
@@ -190,31 +231,38 @@ function OrdersDashboard({ adminKey }) {
   };
 
   const markCompleted = async (orderId) => {
-    if (!confirm("Mark this order as completed and remove it?")) return;
-    await fetch("/api/admin/orders/delete", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-admin-key": adminKey },
-      body: JSON.stringify({ orderId }),
-    });
-    load();
-  };
+  if (!confirm("Mark this order as completed and remove it?")) return;
 
-  const updateTracking = async () => {
-    const res = await fetch("/api/admin/orders/track", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-admin-key": adminKey },
-      body: JSON.stringify({
-        orderId: trackingModal,
-        ...trackForm,
-        lat: trackForm.lat ? parseFloat(trackForm.lat) : undefined,
-        lng: trackForm.lng ? parseFloat(trackForm.lng) : undefined,
-      }),
-    });
-    if (res.ok) {
-      setTrackingModal(null);
-      load();
-    }
-  };
+  await fetch("/api/admin/orders/delete", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ orderId }),
+  });
+
+  load();
+};
+
+const updateTracking = async () => {
+  const res = await fetch("/api/admin/orders/track", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      orderId: trackingModal,
+      ...trackForm,
+      lat: trackForm.lat ? parseFloat(trackForm.lat) : undefined,
+      lng: trackForm.lng ? parseFloat(trackForm.lng) : undefined,
+    }),
+  });
+
+  if (res.ok) {
+    setTrackingModal(null);
+    load();
+  }
+};
 
   useEffect(() => {
     load();
@@ -244,11 +292,10 @@ function OrdersDashboard({ adminKey }) {
           <button
             key={s}
             onClick={() => setFilter(s)}
-            className={`px-4 py-1.5 rounded-full text-xs font-black whitespace-nowrap uppercase tracking-wider transition ${
-              filter === s
+            className={`px-4 py-1.5 rounded-full text-xs font-black whitespace-nowrap uppercase tracking-wider transition ${filter === s
                 ? "bg-[#17d492] text-[#22323c]"
                 : "bg-[#1a2830] text-slate-400 border border-white/10 hover:border-[#17d492]/30"
-            }`}
+              }`}
           >
             {s === "all" ? `All (${orders.length})` : STATUS_LABELS[s]}
           </button>
@@ -278,13 +325,12 @@ function OrdersDashboard({ adminKey }) {
                     {STATUS_LABELS[order.status] || order.status}
                   </span>
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-bold ${
-                      order.category === "groceries"
+                    className={`text-xs px-2 py-0.5 rounded-full font-bold ${order.category === "groceries"
                         ? "bg-green-500/20 text-green-400"
                         : order.category === "mixed"
                           ? "bg-purple-500/20 text-purple-400"
                           : "bg-blue-500/20 text-blue-400"
-                    }`}
+                      }`}
                   >
                     {order.category || "stationery"}
                   </span>
@@ -338,16 +384,16 @@ function OrdersDashboard({ adminKey }) {
                 </p>
                 <p className="font-bold text-white">{order.customer?.name}</p>
                 <a href={`https://wa.me/91${order.customer?.phone}`}
-  target="_blank"
-  rel="noopener noreferrer"
-  className="text-sm text-green-400 font-bold hover:text-green-300 flex items-center gap-1 transition"
->
-  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-    <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.533 5.859L.057 23.215a.75.75 0 0 0 .921.921l5.356-1.476A11.943 11.943 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.713 9.713 0 0 1-4.953-1.355l-.355-.212-3.681 1.015 1.015-3.681-.212-.355A9.713 9.713 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/>
-  </svg>
-  {order.customer?.phone}
-</a>
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-green-400 font-bold hover:text-green-300 flex items-center gap-1 transition"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+                    <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.533 5.859L.057 23.215a.75.75 0 0 0 .921.921l5.356-1.476A11.943 11.943 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.713 9.713 0 0 1-4.953-1.355l-.355-.212-3.681 1.015 1.015-3.681-.212-.355A9.713 9.713 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z" />
+                  </svg>
+                  {order.customer?.phone}
+                </a>
                 <p className="text-sm text-slate-400">
                   {order.customer?.email}
                 </p>
@@ -618,29 +664,29 @@ function ProductsDashboard({ adminKey }) {
   const isPriceOptional = activeCat?.priceOptional || false;
 
   async function uploadImages(files) {
-  setUploading(true);
-  const urls = [];
-  for (const file of files) {
-    const data = new FormData();
-    data.append("file", file);
-    data.append("upload_preset", "products");
-    const res = await fetch(
-      "https://api.cloudinary.com/v1_1/dppzkgajf/image/upload",
-      { method: "POST", body: data },
-    );
-    const json = await res.json();
-    console.log("Cloudinary response:", JSON.stringify(json)); // ← ADD THIS
-    if (!res.ok) {
-      alert("Upload error: " + JSON.stringify(json.error)); // ← CHANGED THIS
-      continue;
+    setUploading(true);
+    const urls = [];
+    for (const file of files) {
+      const data = new FormData();
+      data.append("file", file);
+      data.append("upload_preset", "products");
+      const res = await fetch(
+        "https://api.cloudinary.com/v1_1/dppzkgajf/image/upload",
+        { method: "POST", body: data },
+      );
+      const json = await res.json();
+      console.log("Cloudinary response:", JSON.stringify(json)); // ← ADD THIS
+      if (!res.ok) {
+        alert("Upload error: " + JSON.stringify(json.error)); // ← CHANGED THIS
+        continue;
+      }
+      urls.push(json.secure_url);
     }
-    urls.push(json.secure_url);
+    setUploading(false);
+    return urls;
   }
-  setUploading(false);
-  return urls;
-}
 
- async function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
 
     // ✅ Fixed: price is only required if:
@@ -653,16 +699,19 @@ function ProductsDashboard({ adminKey }) {
       alert("Please enter a price, or add variants with prices instead.");
       return;
     }
-
-    const res = await fetch("/api/admin/products", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-admin-key": adminKey },
-      body: JSON.stringify({
-        ...form,
-        price: form.price ? Number(form.price) : 0,
-        actualPrice: form.actualPrice ? Number(form.actualPrice) : undefined,
-      }),
-    });
+const res = await fetch("/api/admin/products", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    ...form,
+    price: form.price ? Number(form.price) : 0,
+    actualPrice: form.actualPrice
+      ? Number(form.actualPrice)
+      : undefined,
+  }),
+});
     const data = await res.json();
     if (!res.ok) {
       alert("❌ Failed: " + data.error);
@@ -713,11 +762,10 @@ function ProductsDashboard({ adminKey }) {
                 onClick={() =>
                   setForm({ ...form, category: cat.id, subcategory: "" })
                 }
-                className={`px-3 py-2.5 rounded-xl text-xs font-black border transition text-left leading-tight ${
-                  form.category === cat.id
+                className={`px-3 py-2.5 rounded-xl text-xs font-black border transition text-left leading-tight ${form.category === cat.id
                     ? "border-[#17d492] bg-[#17d492]/15 text-[#17d492]"
                     : "border-white/10 text-slate-400 hover:border-white/30 hover:text-white"
-                }`}
+                  }`}
               >
                 {cat.label}
               </button>
@@ -786,43 +834,43 @@ function ProductsDashboard({ adminKey }) {
         </div>
 
         {/* Price */}
-<div className="grid grid-cols-2 gap-3">
-  <div>
-    <label className="text-xs text-slate-400 mb-1 block font-black uppercase tracking-wider">
-      Price ₹{" "}
-      {isPriceOptional ? (
-        <span className="text-amber-400 normal-case">(optional)</span>
-      ) : (
-        "*"
-      )}
-    </label>
-    <input
-      type="number"
-      placeholder={isPriceOptional ? "Leave blank = Contact us" : "e.g. 99"}
-      value={form.price}
-      onChange={(e) => setForm({ ...form, price: e.target.value })}
-      className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 text-white focus:outline-none focus:border-[#17d492]"
-    />
-  </div>
-  <div>
-    <label className="text-xs text-slate-400 mb-1 block font-black uppercase tracking-wider">
-      MRP ₹ (optional)
-    </label>
-    <input
-      type="number"
-      placeholder="Original price"
-      value={form.actualPrice}
-      onChange={(e) => setForm({ ...form, actualPrice: e.target.value })}
-      className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 text-white focus:outline-none focus:border-[#17d492]"
-    />
-  </div>
-</div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs text-slate-400 mb-1 block font-black uppercase tracking-wider">
+              Price ₹{" "}
+              {isPriceOptional ? (
+                <span className="text-amber-400 normal-case">(optional)</span>
+              ) : (
+                "*"
+              )}
+            </label>
+            <input
+              type="number"
+              placeholder={isPriceOptional ? "Leave blank = Contact us" : "e.g. 99"}
+              value={form.price}
+              onChange={(e) => setForm({ ...form, price: e.target.value })}
+              className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 text-white focus:outline-none focus:border-[#17d492]"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-slate-400 mb-1 block font-black uppercase tracking-wider">
+              MRP ₹ (optional)
+            </label>
+            <input
+              type="number"
+              placeholder="Original price"
+              value={form.actualPrice}
+              onChange={(e) => setForm({ ...form, actualPrice: e.target.value })}
+              className="w-full px-4 py-3 rounded-xl bg-[#22323c] border border-white/10 text-white focus:outline-none focus:border-[#17d492]"
+            />
+          </div>
+        </div>
 
-{/* Variants */}
-<VariantsEditor
-  variants={form.variants}
-  onChange={(variants) => setForm({ ...form, variants })}
-/>
+        {/* Variants */}
+        <VariantsEditor
+          variants={form.variants}
+          onChange={(variants) => setForm({ ...form, variants })}
+        />
 
         {/* Unit */}
         <div>
@@ -897,9 +945,7 @@ function ViewProducts({ adminKey }) {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/products", {
-        headers: { "x-admin-key": adminKey },
-      });
+     const res = await fetch("/api/admin/products");
       const data = await res.json();
       setProducts(Array.isArray(data) ? data : []);
     } catch {
@@ -910,14 +956,18 @@ function ViewProducts({ adminKey }) {
   };
 
   const deleteProduct = async (id) => {
-    if (!confirm("Delete this product?")) return;
-    await fetch("/api/admin/products/delete", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-admin-key": adminKey },
-      body: JSON.stringify({ id }),
-    });
-    load();
-  };
+  if (!confirm("Delete this product?")) return;
+
+  await fetch("/api/admin/products/delete", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ id }),
+  });
+
+  load();
+};
 
   useEffect(() => {
     load();
@@ -954,11 +1004,10 @@ function ViewProducts({ adminKey }) {
           <button
             key={c.id}
             onClick={() => setFilter(c.id)}
-            className={`px-3 py-1.5 rounded-full text-xs font-black whitespace-nowrap uppercase tracking-wider transition shrink-0 ${
-              filter === c.id
+            className={`px-3 py-1.5 rounded-full text-xs font-black whitespace-nowrap uppercase tracking-wider transition shrink-0 ${filter === c.id
                 ? "bg-[#17d492] text-[#22323c]"
                 : "bg-[#1a2830] text-slate-400 border border-white/10 hover:border-[#17d492]/30"
-            }`}
+              }`}
           >
             {c.id === "all"
               ? `All (${products.length})`
@@ -1065,10 +1114,15 @@ function EditProductModal({ product, adminKey, onClose, onSuccess }) {
     setLoading(true);
     const { _id, ...rest } = form;
     const res = await fetch("/api/admin/products/update", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-admin-key": adminKey },
-      body: JSON.stringify({ id: product._id, ...rest }),
-    });
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    id: product._id,
+    ...rest,
+  }),
+});
     const data = await res.json();
     setLoading(false);
     if (!res.ok) {
@@ -1096,11 +1150,10 @@ function EditProductModal({ product, adminKey, onClose, onSuccess }) {
               onClick={() =>
                 setForm({ ...form, category: cat.id, subcategory: "" })
               }
-              className={`px-3 py-2 rounded-xl text-xs font-black border transition text-left leading-tight ${
-                form.category === cat.id
+              className={`px-3 py-2 rounded-xl text-xs font-black border transition text-left leading-tight ${form.category === cat.id
                   ? "border-[#17d492] bg-[#17d492]/15 text-[#17d492]"
                   : "border-white/10 text-slate-400 hover:border-white/30"
-              }`}
+                }`}
             >
               {cat.label}
             </button>
@@ -1230,9 +1283,7 @@ function PYQDashboard({ adminKey }) {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/pyqs", {
-        headers: { "x-admin-key": adminKey },
-      });
+      const res = await fetch("/api/admin/pyqs");
       const data = await res.json();
       setPyqs(Array.isArray(data) ? data : []);
     } catch {
@@ -1294,13 +1345,15 @@ function PYQDashboard({ adminKey }) {
     const downloadUrl = getDriveDownloadUrl(form.pdfUrl);
 
     const res = await fetch("/api/admin/pyqs", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-admin-key": adminKey },
-      body: JSON.stringify({
-        ...form,
-        pdfUrl: downloadUrl,
-        department: finalDept,
-      }),
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    ...form,
+    pdfUrl: downloadUrl,
+    department: finalDept,
+  }),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -1325,14 +1378,18 @@ function PYQDashboard({ adminKey }) {
   };
 
   const deletePYQ = async (id) => {
-    if (!confirm("Delete this PYQ?")) return;
-    await fetch("/api/admin/pyqs/delete", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-admin-key": adminKey },
-      body: JSON.stringify({ id }),
-    });
-    load();
-  };
+  if (!confirm("Delete this PYQ?")) return;
+
+  await fetch("/api/admin/pyqs/delete", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ id }),
+  });
+
+  load();
+};
 
   const grouped = pyqs.reduce((acc, pyq) => {
     if (!acc[pyq.department]) acc[pyq.department] = [];
@@ -1363,11 +1420,10 @@ function PYQDashboard({ adminKey }) {
         </h2>
         <button
           onClick={() => setView(view === "add" ? "list" : "add")}
-          className={`px-5 py-2.5 rounded-xl font-black text-sm transition ${
-            view === "add"
+          className={`px-5 py-2.5 rounded-xl font-black text-sm transition ${view === "add"
               ? "bg-white/10 text-white border border-white/20 hover:bg-white/15"
               : "bg-[#17d492] text-[#22323c] hover:bg-[#14b87e]"
-          }`}
+            }`}
         >
           {view === "add" ? "← Back to List" : "+ Add PYQ"}
         </button>
@@ -1523,13 +1579,12 @@ function PYQDashboard({ adminKey }) {
               placeholder="https://drive.google.com/file/d/..."
               value={form.pdfUrl}
               onChange={(e) => handleLinkChange(e.target.value)}
-              className={`w-full px-4 py-3 rounded-xl bg-[#22323c] border text-white text-sm focus:outline-none transition ${
-                linkError
+              className={`w-full px-4 py-3 rounded-xl bg-[#22323c] border text-white text-sm focus:outline-none transition ${linkError
                   ? "border-red-500/50 focus:border-red-500"
                   : isDriveValid
                     ? "border-[#17d492]/50 focus:border-[#17d492]"
                     : "border-white/10 focus:border-[#17d492]"
-              }`}
+                }`}
             />
             {linkError && (
               <p className="text-red-400 text-xs mt-1 font-bold">{linkError}</p>

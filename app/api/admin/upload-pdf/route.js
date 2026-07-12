@@ -1,4 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
+import { cookies } from "next/headers";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "dpsfw0apo",
@@ -8,23 +9,32 @@ cloudinary.config({
 
 export async function POST(req) {
   try {
-    const adminKey = req.headers.get("x-admin-key");
-    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    // Verify admin authentication
+    const cookieStore = await cookies();
+    const admin = cookieStore.get("admin");
+
+    if (!admin || admin.value !== process.env.ADMIN_KEY) {
+      return Response.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     const formData = await req.formData();
     const file = formData.get("file");
 
     if (!file) {
-      return Response.json({ error: "No file provided" }, { status: 400 });
+      return Response.json(
+        { error: "No file provided" },
+        { status: 400 }
+      );
     }
 
     // Convert file to buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Upload to Cloudinary as raw resource with public access
+    // Upload PDF to Cloudinary
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader
         .upload_stream(
@@ -37,14 +47,22 @@ export async function POST(req) {
           (error, result) => {
             if (error) reject(error);
             else resolve(result);
-          },
+          }
         )
         .end(buffer);
     });
 
-    return Response.json({ url: result.secure_url }, { status: 200 });
+    return Response.json(
+      { url: result.secure_url },
+      { status: 200 }
+    );
+
   } catch (err) {
-    console.error("PDF upload error:", err);
-    return Response.json({ error: "Upload failed" }, { status: 500 });
+    console.error("PDF Upload Error:", err);
+
+    return Response.json(
+      { error: "Upload failed" },
+      { status: 500 }
+    );
   }
 }
