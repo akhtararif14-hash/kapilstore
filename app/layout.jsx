@@ -18,11 +18,11 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: {
-    default: "Kapil Store | Stationery, Groceries & Assignment Services",
+    default: "Kapil Store | Stationery & Assignment Services",
     template: "%s | Kapil Store",
   },
   description:
-    "Kapil Store is your one-stop destination for affordable stationery, groceries, notebooks, college assignments, and study essentials with fast delivery.",
+    "Kapil Store is your one-stop destination for affordable stationery, notebooks, college assignments, and study essentials with fast delivery.",
   keywords: [
     "stationery store",
     "online stationery india",
@@ -37,9 +37,9 @@ export const metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Kapil Store | Stationery, Groceries & Assignment Hub",
+    title: "Kapil Store | Stationery & Assignment Hub",
     description:
-      "Buy affordable stationery, groceries and college assignments online from Kapil Store with fast delivery.",
+      "Buy affordable stationery and college assignments online from Kapil Store with fast delivery.",
     url: "https://kapilstore.in",
     siteName: "Kapil Store",
     images: [
@@ -57,7 +57,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "Kapil Store | Assignments & Stationery Hub",
     description:
-      "Affordable stationery and groceries for students. Fast delivery across India.",
+      "Affordable stationery for students. Fast delivery across India.",
     images: ["/newlogonav.png"],
   },
   verification: {
