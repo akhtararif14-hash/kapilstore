@@ -100,7 +100,7 @@ const NON_JAMIA_DELIVERY_INFO = [
     icon: FaTruck,
     text: (
       <>
-        A <span className="text-white font-semibold">10% delivery charge</span>{" "}
+        A <span className="text-white font-semibold">No delivery charge</span>{" "}
         is applied on your order subtotal to cover delivery costs to your
         location.
       </>
@@ -240,7 +240,7 @@ export default function CheckoutPage() {
   };
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const deliveryCharge = isJamiaStudent === true ? 0 : Math.round(subtotal * 0.1);
+  const deliveryCharge = isJamiaStudent === true ? 0 : Math.round(subtotal * 0);
   const platformFee = paymentMethod === "cod" ? COD_PLATFORM_FEE : 0;
   const grandTotal = subtotal + deliveryCharge + platformFee;
 
