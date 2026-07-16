@@ -384,16 +384,6 @@ const updateTracking = async () => {
                   >
                     {STATUS_LABELS[order.status] || order.status}
                   </span>
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-bold ${order.category === "groceries"
-                        ? "bg-green-500/20 text-green-400"
-                        : order.category === "mixed"
-                          ? "bg-purple-500/20 text-purple-400"
-                          : "bg-blue-500/20 text-blue-400"
-                      }`}
-                  >
-                    {order.category || "stationery"}
-                  </span>
                   {order.paymentMethod === "razorpay" && (
                     <span className="text-xs px-2 py-0.5 rounded-full bg-[#17d492]/20 text-[#17d492] font-bold">
                       💳 Paid

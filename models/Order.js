@@ -26,7 +26,7 @@ const OrderSchema = new mongoose.Schema(
 
     category: {
       type: String,
-      enum: ["stationery", "groceries", "mixed"],
+      enum: ["stationery", "mixed"],
       default: "stationery",
     },
 
