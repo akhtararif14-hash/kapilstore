@@ -26,6 +26,8 @@ export async function POST(req) {
       razorpaySignature,
       utrNumber,
     } = body;
+    console.log("Customer object:", customer);
+console.log("Customer phone:", customer.phone);
 
     if (!customer?.name || !customer?.phone || !customer?.address) {
       return Response.json(
