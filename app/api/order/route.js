@@ -1,6 +1,10 @@
 import { connectDB } from "@/lib/mongodb";
 import Order from "@/models/Order";
 import nodemailer from "nodemailer";
+import {
+  sendCustomerWhatsApp,
+  sendAdminWhatsApp,
+} from "@/lib/twilio";
 
 export async function POST(req) {
   try {
@@ -81,6 +85,24 @@ export async function POST(req) {
     });
 
     await order.save();
+    // Customer WhatsApp
+sendCustomerWhatsApp({
+  customer,
+  orderId,
+  total,
+}).catch((err) =>
+  console.error("Customer WhatsApp Error:", err)
+);
+
+// Admin WhatsApp
+sendAdminWhatsApp({
+  customer,
+  orderId,
+  total,
+  paymentMethod,
+}).catch((err) =>
+  console.error("Admin WhatsApp Error:", err)
+);
 
     sendEmails({
       customer,
